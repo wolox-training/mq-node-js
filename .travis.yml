@@ -7,6 +7,11 @@ sudo: true
 
 env:
   - CXX=g++-4.8
+  - DB_HOST=localhost
+  - DB_PORT=5432
+  - DB_NAME=training
+  - DB_USERNAME=training
+  - DB_PASSWORD=pass
 addons:
   apt:
     sources:
@@ -18,5 +23,7 @@ services:
   - postgresql
 
 before_script:
-  - psql -c "CREATE DATABASE bookstest;" -U postgres
+  - psql -c "CREATE ROLE training WITH PASSWORD 'pass'" -U postgres
+  - psql -c "ALTER ROLE training WITH LOGIN" -U postgres
+  - psql -c "CREATE DATABASE training;" -U postgres
   - node_modules/.bin/sequelize db:migrate
