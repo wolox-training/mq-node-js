@@ -33,7 +33,7 @@ module.exports = {
 
     let errorMsg;
 
-    // check if all fields are present
+    // check if all fields are present and have truthy values.
     const allFieldsPresent = Object.values(parameters).every(v => v);
     if (!allFieldsPresent) errorMsg = 'firstName, lastName, email and password fields are required';
 
@@ -44,11 +44,16 @@ module.exports = {
       errorMsg = 'password must be alphanumeric and at least 8 characters long';
 
     if (!errorMsg) {
-      const existingUser = await db.User.findOne({
-        where: { email: parameters.email }
-      });
-
-      if (existingUser) errorMsg = 'email already exists!';
+      try {
+        const existingUser = await db.User.findOne({
+          where: { email: parameters.email }
+        });
+        if (existingUser) errorMsg = 'email already exists!';
+      } catch (err) {
+        console.log(`DB Error: ${err}`);
+        res.status(500).send();
+        return;
+      }
     }
 
     if (errorMsg) {
