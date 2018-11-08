@@ -45,10 +45,10 @@ module.exports = {
 
     if (!errorMsg) {
       try {
-        const existingUser = await db.User.findOne({
+        const userExists = await db.User.count({
           where: { email: parameters.email }
         });
-        if (existingUser) errorMsg = 'email already exists!';
+        if (userExists) errorMsg = 'email already exists!';
       } catch (err) {
         console.log(`DB Error: ${err}`);
         res.status(500).send();
