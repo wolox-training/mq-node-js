@@ -6,12 +6,6 @@ const chai = require('chai'),
 const testEmail = 'someemail@wolox.com.ar',
   testPassword = 'somepassword1';
 
-const registerTestUser = async function() {
-  chai
-    .request(server)
-    .post(`/users?firstName=name&lastName=surname&email=${testEmail}&password=${testPassword}`);
-};
-
 describe('/users POST', () => {
   it('should successfully create a user', function(done) {
     chai
