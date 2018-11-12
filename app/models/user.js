@@ -1,6 +1,6 @@
 'use strict';
 
-const bcrypt = require('bcryptjs');
+const errors = require('../errors');
 
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define(
@@ -17,17 +17,15 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true
     }
   );
+
   User.associate = function(models) {
     // associations can be defined here
   };
 
-  User.generateHash = function(password) {
-    return bcrypt.hash(password, bcrypt.genSaltSync(8));
-  };
-
-  User.validPassword = function(password) {
-    return bcrypt.compare(password, this.password);
-  };
+  User.createModel = user =>
+    User.create(user).catch(e => {
+      throw errors.databaseError(e.message);
+    });
 
   return User;
 };
