@@ -8,15 +8,15 @@ exports.signUp = ({ user }, res, next) => {
     .hashPassword(user.password)
     .then(hashed => {
       user.password = hashed;
-      return User.create(user)
+      User.create(user)
         .then(dbUser => {
           logger.info(`User ${dbUser.lastName}, ${dbUser.firstName} created successfuly`);
-          res
+          return res
             .status(201)
             .send(dbUser)
             .end();
         })
-        .catch(next);
+        .catch(e => next(e));
     })
-    .catch(e => errors.bcryptError('Password encryption failed'));
+    .catch(e => next(errors.bcryptError('Password encryption failed')));
 };
