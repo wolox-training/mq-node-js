@@ -42,7 +42,7 @@ const validateErrors = (req, res, next) => {
     .map(e => e.msg);
   if (validationErrors.length === 0) next();
   else {
-    next(errors.badRequest({ errors: validationErrors }));
+    throw errors.badRequest(validationErrors);
   }
 };
 
