@@ -16,7 +16,7 @@ exports.signUp = ({ user }, res, next) => {
             .send(dbUser)
             .end();
         })
-        .catch(next);
+        .catch(e => next(e));
     })
-    .catch(e => errors.bcryptError('Password encryption failed'));
+    .catch(e => next(errors.bcryptError('Password encryption failed')));
 };
