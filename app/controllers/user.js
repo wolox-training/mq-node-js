@@ -13,9 +13,9 @@ exports.signUp = ({ user }, res, next) => {
   emailIsRegistered(user.email)
     .then(isRegistered => {
       if (isRegistered) next(errors.badRequest('email is already registered'));
-      else {
-        bcryptService.hashPassword(user.password).then(hashedPassword => {
-          return User.create({ ...user, password: hashedPassword }).then(newUser => {
+      else
+        return bcryptService.hashPassword(user.password).then(hashedPassword => {
+          User.create({ ...user, password: hashedPassword }).then(newUser => {
             logger.info(`User ${newUser.lastName}, ${newUser.firstName} created successfuly`);
             res
               .status(201)
@@ -23,7 +23,6 @@ exports.signUp = ({ user }, res, next) => {
               .end();
           });
         });
-      }
     })
     .catch(next);
 };
