@@ -24,7 +24,5 @@ exports.signIn = ({ user }, res, next) => {
         })
         .catch(e => next(errors.bcryptError('Password hash validation failed')));
     })
-    .catch(e => {
-      throw errors.databaseError(e.message);
-    });
+    .catch(e => next(errors.databaseError(e.message)));
 };
