@@ -1,116 +1,112 @@
 const chai = require('chai'),
   dictum = require('dictum.js'),
   server = require('./../app'),
-  should = chai.should();
+  should = chai.should(),
+  User = require('./../app/models').User;
 
 const testEmail = 'someemail@wolox.com.ar',
   testPassword = 'somepassword1';
 
 describe('/users POST', () => {
-  it('should successfully create a user', function(done) {
+  it('should successfully create a user', done => {
     chai
       .request(server)
       .post('/users')
       .set('content-type', 'application/json')
       .send({ firstName: 'name', lastName: 'surname', email: testEmail, password: testPassword })
-      .end(function(err, res) {
+      .then(res => {
         res.should.have.status(201);
-        should.not.exist(err);
-        dictum.chai(
-          res,
-          'Endpoint to create a new user providing first name, last name, a wolox email account and password being at least 8 characters long and alphanumeric'
-        );
-        done();
-      });
+        return User.count({ where: { email: testEmail } });
+      })
+      .then(count => {
+        should.equal(count, 1);
+      })
+      .catch(e => {
+        should.not.exist(e);
+      })
+      .then(() => done());
   });
 
-  it('should not create a user because the email is not an email', function(done) {
+  it('should not create a user because the email is not an email', done => {
     chai
       .request(server)
       .post('/users')
       .set('content-type', 'application/json')
       .send({ firstName: 'name', lastName: 'surname', email: 'not an email', password: testPassword })
-      .end(function(err, res) {
-        res.should.have.status(400);
-        should.exist(err);
+      .catch(e => {
+        should.exist(e);
         done();
       });
   });
 
-  it('should not create a user because the email does not belong to wolox', function(done) {
+  it('should not create a user because the email does not belong to wolox', done => {
     chai
       .request(server)
       .post('/users')
       .set('content-type', 'application/json')
       .send({ firstName: 'name', lastName: 'surname', email: 'someemail@gmail.com', password: testPassword })
-      .end(function(err, res) {
-        res.should.have.status(400);
-        should.exist(err);
+      .catch(e => {
+        should.exist(e);
         done();
       });
   });
 
-  it('should not create a user because the password is missing', function(done) {
+  it('should not create a user because the password is missing', done => {
     chai
       .request(server)
       .post('/users')
       .set('content-type', 'application/json')
       .send({ firstName: 'name', lastName: 'surname', email: testEmail })
-      .end(function(err, res) {
-        res.should.have.status(400);
-        should.exist(err);
+      .catch(e => {
+        should.exist(e);
         done();
       });
   });
 
-  it('should not create a user because the password is not alphanumeric', function(done) {
+  it('should not create a user because the password is not alphanumeric', done => {
     chai
       .request(server)
       .post('/users')
       .set('content-type', 'application/json')
       .send({ firstName: 'name', lastName: 'surname', email: testEmail, password: 'somepassword' })
-      .end(function(err, res) {
-        res.should.have.status(400);
-        should.exist(err);
+      .catch(e => {
+        should.exist(e);
         done();
       });
   });
 
-  it('should not create a user because the password is not long enough', function(done) {
+  it('should not create a user because the password is not long enough', done => {
     chai
       .request(server)
       .post('/users')
       .set('content-type', 'application/json')
       .send({ firstName: 'name', lastName: 'surname', email: testEmail, password: 'pass1' })
-      .end(function(err, res) {
-        res.should.have.status(400);
-        should.exist(err);
+      .catch(e => {
+        should.exist(e);
         done();
       });
   });
 
-  it('should not create a user because the last name is missing', function(done) {
+  it('should not create a user because the last name is missing', done => {
     chai
       .request(server)
       .post('/users')
       .set('content-type', 'application/json')
       .send({ firstName: 'name', email: testEmail, password: testPassword })
-      .end(function(err, res) {
-        res.should.have.status(400);
-        should.exist(err);
+      .catch(e => {
+        should.exist(e);
         done();
       });
   });
 
-  it('should not create a user because the first name is missing', function(done) {
+  it('should not create a user because the first name is missing', done => {
     chai
       .request(server)
       .post('/users')
       .set('content-type', 'application/json')
       .send({ lastName: 'lastname', email: testEmail, password: testPassword })
-      .end(function(err, res) {
-        res.should.have.status(400);
-        should.exist(err);
+      .catch(e => {
+        should.exist(e);
         done();
       });
   });

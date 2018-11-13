@@ -3,20 +3,27 @@ const User = require('../models').User,
   errors = require('../errors'),
   bcryptService = require('../services/bcrypt');
 
+const emailIsRegistered = email => {
+  return User.count({ where: { email } }).catch(e => {
+    throw errors.databaseError(e.message);
+  });
+};
+
 exports.signUp = ({ user }, res, next) => {
-  bcryptService
-    .hashPassword(user.password)
-    .then(hashed => {
-      user.password = hashed;
-      User.create(user)
-        .then(dbUser => {
-          logger.info(`User ${dbUser.lastName}, ${dbUser.firstName} created successfuly`);
-          return res
-            .status(201)
-            .send(dbUser)
-            .end();
-        })
-        .catch(e => next(e));
+  emailIsRegistered(user.email)
+    .then(isRegistered => {
+      if (isRegistered) next(errors.badRequest('email is already registered'));
+      else {
+        bcryptService.hashPassword(user.password).then(hashedPassword => {
+          return User.create({ ...user, password: hashedPassword }).then(newUser => {
+            logger.info(`User ${newUser.lastName}, ${newUser.firstName} created successfuly`);
+            res
+              .status(201)
+              .send(newUser)
+              .end();
+          });
+        });
+      }
     })
-    .catch(e => next(errors.bcryptError('Password encryption failed')));
+    .catch(next);
 };

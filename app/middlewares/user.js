@@ -10,12 +10,6 @@ const emailBelongsToWolox = email => {
   return email.replace(/.*@/, '') === 'wolox.com.ar';
 };
 
-const emailIsRegistered = email => {
-  return User.count({ where: { email } }).catch(e => {
-    throw errors.databaseError(e.message);
-  });
-};
-
 exports.validateEmail = body('email')
   .isEmail()
   .withMessage('The email is required')
@@ -41,12 +35,6 @@ exports.validatePassword = body('password')
   .withMessage('Password must be at least 8 characters long')
   .matches(/\d/)
   .withMessage('Password must be alphanumeric');
-
-exports.validateEmailIsNotRegistered = body('email').custom(email => {
-  return emailIsRegistered(email).then(isRegistered => {
-    if (isRegistered) return Promise.reject('E-mail already in use');
-  });
-});
 
 const validateErrors = (req, res, next) => {
   const validationErrors = validationResult(req)
