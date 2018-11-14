@@ -1,29 +1,26 @@
 language: node_js
 
 node_js:
-  - "8.9.4"
+  - '8.9.4'
 
 sudo: true
 
 env:
   - CXX=g++-4.8
-  - DB_HOST=localhost
-  - DB_PORT=5432
-  - DB_NAME=training
-  - DB_USERNAME=training
-  - DB_PASSWORD=pass
+
 addons:
   apt:
     sources:
-    - ubuntu-toolchain-r-test
+      - ubuntu-toolchain-r-test
     packages:
-    - g++-4.8
+      - g++-4.8
 
 services:
   - postgresql
 
 before_script:
-  - psql -c "CREATE ROLE training WITH PASSWORD 'pass'" -U postgres
-  - psql -c "ALTER ROLE training WITH LOGIN" -U postgres
-  - psql -c "CREATE DATABASE training;" -U postgres
-  - node_modules/.bin/sequelize db:migrate
+  - psql -c "CREATE ROLE trainingtest WITH PASSWORD 'pass'" -U postgres
+  - psql -c "ALTER ROLE trainingtest WITH LOGIN" -U postgres
+  - psql -c "CREATE DATABASE trainingtest;" -U postgres
+  - npm install
+  - npm run migrations-test

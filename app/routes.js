@@ -1,7 +1,16 @@
-// const controller = require('./controllers/controller');
+const userController = require('./controllers/user'),
+  {
+    validateEmail,
+    validateFirstName,
+    validateLastName,
+    validateSignUp,
+    validatePassword
+  } = require('./middlewares/user');
 
 exports.init = app => {
-  // app.get('/endpoint/get/path', [], controller.methodGET);
-  // app.put('/endpoint/put/path', [], controller.methodPUT);
-  // app.post('/endpoint/post/path', [], controller.methodPOST);
+  app.post(
+    '/users',
+    [validateFirstName, validateLastName, validateEmail, validatePassword, validateSignUp],
+    userController.signUp
+  );
 };
