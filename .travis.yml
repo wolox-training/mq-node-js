@@ -19,9 +19,9 @@ services:
   - postgresql
 
 before_script:
-  - npm install
-  - npm run migrations-test
   - psql -c "CREATE ROLE training WITH PASSWORD 'pass'" -U postgres
   - psql -c "ALTER ROLE training WITH LOGIN" -U postgres
   - psql -c "CREATE DATABASE training;" -U postgres
+  - npm install
+  - npm run migrations-test
   - node_modules/.bin/sequelize db:migrate
