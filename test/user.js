@@ -3,7 +3,8 @@ const chai = require('chai'),
   server = require('./../app'),
   should = chai.should(),
   errors = require('./../app/errors'),
-  User = require('./../app/models').User;
+  User = require('./../app/models').User,
+  validationErrorMessages = require('./../app/middlewares/user').validationErrorMessages;
 
 const testEmail = 'someemail@wolox.com.ar',
   testPassword = 'somepassword1';
@@ -33,8 +34,23 @@ describe('/users POST', () => {
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
-        should.equal(e.response.body.message[0], 'The email is required');
-        should.equal(e.response.body.message[1], 'Email is required and must belong to wolox');
+
+        should.equal(
+          e.response.body.message.length,
+          2,
+          'We should expect two messages, one indicating message is required and another one indicating that the email must belong to Wolox'
+        );
+
+        should.equal(
+          e.response.body.message.some(msg => msg === validationErrorMessages.emailIsRequired),
+          true
+        );
+
+        should.equal(
+          e.response.body.message.some(msg => msg === validationErrorMessages.emailMustBelongToWolox),
+          true
+        );
+
         done();
       });
   });
@@ -48,7 +64,17 @@ describe('/users POST', () => {
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
-        should.equal(e.response.body.message[0], 'Email is required and must belong to wolox');
+        should.equal(
+          e.response.body.message.length,
+          1,
+          'We should expect only one message indicating that the email must belong to wolox'
+        );
+
+        should.equal(
+          e.response.body.message.some(msg => msg === validationErrorMessages.emailMustBelongToWolox),
+          true
+        );
+
         done();
       });
   });
@@ -62,8 +88,25 @@ describe('/users POST', () => {
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
-        should.equal(e.response.body.message[0], 'Password must be at least 8 characters long');
-        should.equal(e.response.body.message[1], 'Password must be alphanumeric');
+        should.equal(
+          e.response.body.message.length,
+          3,
+          'We should expect three messages, password is required, at least 8 chars and alphanumeric'
+        );
+        should.equal(
+          e.response.body.message.some(msg => msg === validationErrorMessages.passwordIsRequired),
+          true
+        );
+        should.equal(
+          e.response.body.message.some(
+            msg => msg === validationErrorMessages.passwordMustBeAtLeast8CharsLong
+          ),
+          true
+        );
+        should.equal(
+          e.response.body.message.some(msg => msg === validationErrorMessages.passwordMustBeAlphanumeric),
+          true
+        );
         done();
       });
   });
@@ -77,7 +120,15 @@ describe('/users POST', () => {
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
-        should.equal(e.response.body.message[0], 'Password must be alphanumeric');
+        should.equal(
+          e.response.body.message.length,
+          1,
+          'We should expect one messages indicating the password must be alphanumeric'
+        );
+        should.equal(
+          e.response.body.message.some(msg => msg === validationErrorMessages.passwordMustBeAlphanumeric),
+          true
+        );
         done();
       });
   });
@@ -91,7 +142,17 @@ describe('/users POST', () => {
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
-        should.equal(e.response.body.message[0], 'Password must be at least 8 characters long');
+        should.equal(
+          e.response.body.message.length,
+          1,
+          'We should expect one messages indicating the password must be at least 8 characters long'
+        );
+        should.equal(
+          e.response.body.message.some(
+            msg => msg === validationErrorMessages.passwordMustBeAtLeast8CharsLong
+          ),
+          true
+        );
         done();
       });
   });
@@ -105,9 +166,29 @@ describe('/users POST', () => {
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
-        should.equal(e.response.body.message[0], 'The lastName field is required');
-        should.equal(e.response.body.message[1], 'The lastName field must be string');
-        should.equal(e.response.body.message[2], 'The lastName field must not be empty');
+        should.equal(
+          e.response.body.message.length,
+          3,
+          'We should expect three messages, lastName is required, string and not empty'
+        );
+        should.equal(
+          e.response.body.message.some(
+            msg => msg === validationErrorMessages.textFieldCantBeEmpty('lastName')
+          ),
+          true
+        );
+        should.equal(
+          e.response.body.message.some(
+            msg => msg === validationErrorMessages.textFieldMustBeString('lastName')
+          ),
+          true
+        );
+        should.equal(
+          e.response.body.message.some(
+            msg => msg === validationErrorMessages.textFieldIsRequired('lastName')
+          ),
+          true
+        );
         done();
       });
   });
@@ -121,9 +202,29 @@ describe('/users POST', () => {
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
-        should.equal(e.response.body.message[0], 'The firstName field is required');
-        should.equal(e.response.body.message[1], 'The firstName field must be string');
-        should.equal(e.response.body.message[2], 'The firstName field must not be empty');
+        should.equal(
+          e.response.body.message.length,
+          3,
+          'We should expect three messages, firstName is required, string and not empty'
+        );
+        should.equal(
+          e.response.body.message.some(
+            msg => msg === validationErrorMessages.textFieldCantBeEmpty('firstName')
+          ),
+          true
+        );
+        should.equal(
+          e.response.body.message.some(
+            msg => msg === validationErrorMessages.textFieldMustBeString('firstName')
+          ),
+          true
+        );
+        should.equal(
+          e.response.body.message.some(
+            msg => msg === validationErrorMessages.textFieldIsRequired('firstName')
+          ),
+          true
+        );
         done();
       });
   });

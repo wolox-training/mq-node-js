@@ -3,6 +3,17 @@ const { body, check, validationResult } = require('express-validator/check'),
   logger = require('../logger'),
   errors = require('../errors');
 
+exports.validationErrorMessages = {
+  emailIsRequired: 'The email is required',
+  emailMustBelongToWolox: 'Email must belong to wolox',
+  textFieldIsRequired: field => `The ${field} field is required`,
+  textFieldMustBeString: field => `The ${field} field must be string`,
+  textFieldCantBeEmpty: field => `The ${field} cant be empty`,
+  passwordMustBeAtLeast8CharsLong: 'Password must be at least 8 characters long',
+  passwordMustBeAlphanumeric: 'Password must be alphanumeric',
+  passwordIsRequired: 'The password is required'
+};
+
 const emailBelongsToWolox = email => {
   // checks if email is valid and if it's domain belongs to wolox.
   // regex exp replaces all characters up-to and including the last '@' with empty: ''
@@ -12,29 +23,31 @@ const emailBelongsToWolox = email => {
 
 exports.validateEmail = body('email')
   .isEmail()
-  .withMessage('The email is required')
+  .withMessage(exports.validationErrorMessages.emailIsRequired)
   .normalizeEmail()
   .custom(email => emailBelongsToWolox(email))
-  .withMessage('Email is required and must belong to wolox');
+  .withMessage(exports.validationErrorMessages.emailMustBelongToWolox);
 
 const validateTextField = field =>
   body(field)
     .exists()
-    .withMessage(`The ${field} field is required`)
+    .withMessage(exports.validationErrorMessages.textFieldIsRequired(field))
     .isString()
-    .withMessage(`The ${field} field must be string`)
+    .withMessage(exports.validationErrorMessages.textFieldMustBeString(field))
     .not()
     .isEmpty()
-    .withMessage(`The ${field} field must not be empty`);
+    .withMessage(exports.validationErrorMessages.textFieldCantBeEmpty(field));
 
 exports.validateFirstName = validateTextField('firstName');
 exports.validateLastName = validateTextField('lastName');
 
 exports.validatePassword = body('password')
+  .exists()
+  .withMessage(exports.validationErrorMessages.passwordIsRequired)
   .isLength({ min: 8 })
-  .withMessage('Password must be at least 8 characters long')
+  .withMessage(exports.validationErrorMessages.passwordMustBeAtLeast8CharsLong)
   .matches(/\d/)
-  .withMessage('Password must be alphanumeric');
+  .withMessage(exports.validationErrorMessages.passwordMustBeAlphanumeric);
 
 const validateErrors = (req, res, next) => {
   const validationErrors = validationResult(req)
