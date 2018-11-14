@@ -4,25 +4,29 @@ const chai = require('chai'),
   should = chai.should(),
   errors = require('./../app/errors'),
   User = require('./../app/models').User,
-  validationErrorMessages = require('./../app/middlewares/user').validationErrorMessages;
+  validationErrorMessages = require('./../app/middlewares/user').validationErrorMessages,
+  badRequestErrorMessages = require('./../app/controllers/user').badRequestErrorMessages;
 
 const testEmail = 'someemail@wolox.com.ar',
   testPassword = 'somepassword1';
 
+const signUpTestUser = () =>
+  chai
+    .request(server)
+    .post('/users')
+    .set('content-type', 'application/json')
+    .send({ firstName: 'name', lastName: 'surname', email: testEmail, password: testPassword });
+
 describe('/users POST', () => {
   it('should successfully create a user', done => {
-    chai
-      .request(server)
-      .post('/users')
-      .set('content-type', 'application/json')
-      .send({ firstName: 'name', lastName: 'surname', email: testEmail, password: testPassword })
-      .then(res => {
-        res.should.have.status(201);
-        User.count({ where: { email: testEmail } }).then(count => {
-          should.equal(count, 1);
-          done();
-        });
+    signUpTestUser().then(res => {
+      res.should.have.status(201);
+      User.count({ where: { email: testEmail } }).then(count => {
+        should.equal(count, 1);
+        dictum.chai(res);
+        done();
       });
+    });
   });
 
   it('should not create a user because the email is not an email', done => {
@@ -223,6 +227,128 @@ describe('/users POST', () => {
           e.response.body.message.some(
             msg => msg === validationErrorMessages.textFieldIsRequired('firstName')
           ),
+          true
+        );
+        done();
+      });
+  });
+});
+
+describe('/users/sessions POST', () => {
+  it('should successfully log in a user', done => {
+    signUpTestUser().then(res => {
+      // user should been successfully created
+      res.should.have.status(201);
+      User.count({ where: { email: testEmail } })
+        .then(count => {
+          should.equal(count, 1);
+        })
+        .then(() => {
+          chai
+            .request(server)
+            .post('/users/sessions')
+            .set('content-type', 'application/json')
+            .send({ email: testEmail, password: testPassword })
+            .then(r => {
+              should.exist(r.body.token);
+              should.not.equal(r.body.token, '', 'token shouldnt be empty');
+              dictum.chai(res);
+              done();
+            });
+        });
+    });
+  });
+
+  it('should not log in because the email is not registered', done => {
+    chai
+      .request(server)
+      .post('/users/sessions')
+      .set('content-type', 'application/json')
+      .send({ email: testEmail, password: testPassword })
+      .catch(e => {
+        should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
+        should.equal(e.status, 400);
+        should.equal(e.response.body.message, badRequestErrorMessages.nonExistingUser);
+        done();
+      });
+  });
+
+  it('should not login a user because the password is invalid', done => {
+    signUpTestUser().then(res => {
+      // user should been successfully created
+      res.should.have.status(201);
+      User.count({ where: { email: testEmail } })
+        .then(count => {
+          should.equal(count, 1);
+        })
+        .then(() => {
+          chai
+            .request(server)
+            .post('/users/sessions')
+            .set('content-type', 'application/json')
+            .send({ email: testEmail, password: `${testPassword}2` })
+            .catch(e => {
+              should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
+              should.equal(e.status, 400);
+              should.equal(e.response.body.message, badRequestErrorMessages.invalidPassword);
+              done();
+            });
+        });
+    });
+  });
+
+  it('should not login a user because the password is missing', done => {
+    chai
+      .request(server)
+      .post('/users/sessions')
+      .set('content-type', 'application/json')
+      .send({ email: testEmail })
+      .catch(e => {
+        should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
+        should.equal(e.status, 400);
+        should.equal(
+          e.response.body.message.length,
+          3,
+          'We should expect three messages, password is required, at least 8 chars and alphanumeric'
+        );
+        should.equal(
+          e.response.body.message.some(msg => msg === validationErrorMessages.passwordIsRequired),
+          true
+        );
+        should.equal(
+          e.response.body.message.some(
+            msg => msg === validationErrorMessages.passwordMustBeAtLeast8CharsLong
+          ),
+          true
+        );
+        should.equal(
+          e.response.body.message.some(msg => msg === validationErrorMessages.passwordMustBeAlphanumeric),
+          true
+        );
+        done();
+      });
+  });
+
+  it('should not login a user because the email is missing', done => {
+    chai
+      .request(server)
+      .post('/users/sessions')
+      .set('content-type', 'application/json')
+      .send({ password: testPassword })
+      .catch(e => {
+        should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
+        should.equal(e.status, 400);
+        should.equal(
+          e.response.body.message.length,
+          2,
+          'We should expect 2 messages, email is required and must belong to wolox'
+        );
+        should.equal(
+          e.response.body.message.some(msg => msg === validationErrorMessages.emailIsRequired),
+          true
+        );
+        should.equal(
+          e.response.body.message.some(msg => msg === validationErrorMessages.emailMustBelongToWolox),
           true
         );
         done();

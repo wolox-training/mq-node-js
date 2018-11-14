@@ -3,7 +3,6 @@ const userController = require('./controllers/user'),
     validateEmail,
     validateLogin,
     validatePassword,
-    validateEmailIsRegistered,
     validateFirstName,
     validateLastName,
     validateSignUp
@@ -15,4 +14,6 @@ exports.init = app => {
     [validateFirstName, validateLastName, validateEmail, validatePassword, validateSignUp],
     userController.signUp
   );
+
+  app.post('/users/sessions', [validateEmail, validatePassword, validateLogin], userController.logIn);
 };

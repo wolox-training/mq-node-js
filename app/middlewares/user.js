@@ -1,6 +1,4 @@
 const { body, check, validationResult } = require('express-validator/check'),
-  User = require('../models').User,
-  logger = require('../logger'),
   errors = require('../errors');
 
 exports.validationErrorMessages = {
