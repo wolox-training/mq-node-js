@@ -248,6 +248,7 @@ describe('/users/sessions POST', () => {
           should.exist(res.text);
           const payload = jwt.decode(res.text);
           should.exist(payload.email);
+          should.equal(payload.email, testEmail);
           dictum.chai(res);
           done();
         });
