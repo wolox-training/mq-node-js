@@ -8,7 +8,7 @@ const emailIsRegistered = email =>
     throw errors.databaseError(e.message);
   });
 
-exports.signUp = ({ user }, res, next) => {
+exports.signUp = ({ user }, res, next) =>
   emailIsRegistered(user.email)
     .then(isRegistered => {
       if (isRegistered) throw errors.badRequest('email is already registered');
@@ -24,4 +24,3 @@ exports.signUp = ({ user }, res, next) => {
         );
     })
     .catch(next);
-};
