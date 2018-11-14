@@ -24,4 +24,3 @@ before_script:
   - psql -c "CREATE DATABASE training;" -U postgres
   - npm install
   - npm run migrations
-  - npm run migrations-test
