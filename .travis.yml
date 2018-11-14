@@ -23,4 +23,4 @@ before_script:
   - psql -c "ALTER ROLE trainingtest WITH LOGIN" -U postgres
   - psql -c "CREATE DATABASE trainingtest;" -U postgres
   - npm install
-  - npm run migrations
+  - npm run migrations-test
