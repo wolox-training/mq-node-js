@@ -5,7 +5,10 @@ const userController = require('./controllers/user'),
     validatePassword,
     validateFirstName,
     validateLastName,
-    validateSignUp
+    validateSignUp,
+    validatePage,
+    validateToken,
+    validateErrors
   } = require('./middlewares/user');
 
 exports.init = app => {
@@ -16,4 +19,6 @@ exports.init = app => {
   );
 
   app.post('/users/sessions', [validateEmail, validatePassword, validateLogin], userController.logIn);
+
+  app.get('/users', [validatePage, validateToken, validateErrors], userController.listUsers);
 };

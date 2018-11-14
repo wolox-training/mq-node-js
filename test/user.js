@@ -17,6 +17,37 @@ const signUpTestUser = () =>
     .set('content-type', 'application/json')
     .send({ firstName: 'name', lastName: 'surname', email: testEmail, password: testPassword });
 
+describe('/users GET', () => {
+  it('should successfully return the registered user', done => {
+    signUpTestUser().then(res => {
+      res.should.have.status(201);
+      User.count({ where: { email: testEmail } })
+        .then(count => should.equal(count, 1))
+        .then(() => {
+          // user is registeread. should login now to get token
+          chai
+            .request(server)
+            .post('/users/sessions')
+            .set('content-type', 'application/json')
+            .send({ email: testEmail, password: testPassword })
+            .then(tokenResponse => {
+              should.exist(tokenResponse.body.token);
+
+              chai
+                .request(server)
+                .get('/users')
+                .set('token', tokenResponse.body.token)
+                .send()
+                .then(userListResponse => {
+                  should.equal(userListResponse.body.users[0].email, testEmail);
+                  done();
+                });
+            });
+        });
+    });
+  });
+});
+
 describe('/users POST', () => {
   it('should successfully create a user', done => {
     signUpTestUser().then(res => {

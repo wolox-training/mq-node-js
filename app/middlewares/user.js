@@ -1,7 +1,7 @@
-const { body, check, validationResult } = require('express-validator/check'),
+const { body, header, validationResult } = require('express-validator/check'),
   errors = require('../errors');
 
-exports.validationErrorMessages = {
+const errorMsgs = {
   emailIsRequired: 'The email is required',
   emailMustBelongToWolox: 'Email must belong to wolox',
   textFieldIsRequired: field => `The ${field} field is required`,
@@ -9,8 +9,14 @@ exports.validationErrorMessages = {
   textFieldCantBeEmpty: field => `The ${field} cant be empty`,
   passwordMustBeAtLeast8CharsLong: 'Password must be at least 8 characters long',
   passwordMustBeAlphanumeric: 'Password must be alphanumeric',
-  passwordIsRequired: 'The password is required'
+  passwordIsRequired: 'The password is required',
+  tokenIsRequired: 'Token is required',
+  tokenCantBeEmpty: 'Token cant be empty',
+  pageCantBeEmpty: 'Page cant be empty',
+  pageMustBeANumber: 'Page must be a number'
 };
+
+exports.validationErrorMessages = errorMsgs;
 
 const emailBelongsToWolox = email => {
   // checks if email is valid and if it's domain belongs to wolox.
@@ -21,33 +27,33 @@ const emailBelongsToWolox = email => {
 
 exports.validateEmail = body('email')
   .isEmail()
-  .withMessage(exports.validationErrorMessages.emailIsRequired)
+  .withMessage(errorMsgs.emailIsRequired)
   .normalizeEmail()
   .custom(email => emailBelongsToWolox(email))
-  .withMessage(exports.validationErrorMessages.emailMustBelongToWolox);
+  .withMessage(errorMsgs.emailMustBelongToWolox);
 
 const validateTextField = field =>
   body(field)
     .exists()
-    .withMessage(exports.validationErrorMessages.textFieldIsRequired(field))
+    .withMessage(errorMsgs.textFieldIsRequired(field))
     .isString()
-    .withMessage(exports.validationErrorMessages.textFieldMustBeString(field))
+    .withMessage(errorMsgs.textFieldMustBeString(field))
     .not()
     .isEmpty()
-    .withMessage(exports.validationErrorMessages.textFieldCantBeEmpty(field));
+    .withMessage(errorMsgs.textFieldCantBeEmpty(field));
 
 exports.validateFirstName = validateTextField('firstName');
 exports.validateLastName = validateTextField('lastName');
 
 exports.validatePassword = body('password')
   .exists()
-  .withMessage(exports.validationErrorMessages.passwordIsRequired)
+  .withMessage(errorMsgs.passwordIsRequired)
   .isLength({ min: 8 })
-  .withMessage(exports.validationErrorMessages.passwordMustBeAtLeast8CharsLong)
+  .withMessage(errorMsgs.passwordMustBeAtLeast8CharsLong)
   .matches(/\d/)
-  .withMessage(exports.validationErrorMessages.passwordMustBeAlphanumeric);
+  .withMessage(errorMsgs.passwordMustBeAlphanumeric);
 
-const validateErrors = (req, res, next) => {
+exports.validateErrors = (req, res, next) => {
   const validationErrors = validationResult(req)
     .array()
     .map(e => e.msg);
@@ -60,11 +66,26 @@ const validateErrors = (req, res, next) => {
 exports.validateLogin = (req, res, next) => {
   const { email, password } = req.body;
   req.user = { email, password };
-  validateErrors(req, res, next);
+  exports.validateErrors(req, res, next);
 };
 
 exports.validateSignUp = (req, res, next) => {
   const { firstName, lastName, email, password } = req.body;
   req.user = { firstName, lastName, email, password };
-  validateErrors(req, res, next);
+  exports.validateErrors(req, res, next);
 };
+
+exports.validateToken = header('token')
+  .exists()
+  .withMessage(errorMsgs.tokenIsRequired)
+  .not()
+  .isEmpty()
+  .withMessage(errorMsgs.tokenCantBeEmpty);
+
+exports.validatePage = header('page')
+  .optional()
+  .not()
+  .isEmpty()
+  .withMessage(errorMsgs.pageCantBeEmpty)
+  .isNumeric()
+  .withMessage(errorMsgs.pageMustBeANumber);

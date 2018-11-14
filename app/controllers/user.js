@@ -1,6 +1,6 @@
 const User = require('../models').User,
   logger = require('../logger'),
-  jwt = require('jwt-simple'),
+  jwt = require('../services/jwt'),
   errors = require('../errors'),
   bcryptService = require('../services/bcrypt'),
   secret = require('../../config/index').common.session.secret;
@@ -8,6 +8,7 @@ const User = require('../models').User,
 const errorMsgs = {
   nonExistingUser: 'User does not exist',
   invalidPassword: 'Invalid password',
+  invalidToken: 'Invalid Token',
   emailIsAlreadyRegistered: 'email is already registered'
 };
 exports.badRequestErrorMessages = errorMsgs;
@@ -57,3 +58,28 @@ exports.signUp = ({ user }, res, next) =>
         );
     })
     .catch(next);
+
+exports.listUsers = (req, res, next) => {
+  try {
+    const decoded = jwt.decode(req.headers.token);
+  } catch (e) {
+    next(errors.badRequest(errorMsgs.invalidToken));
+    return;
+  }
+  const itemsPerPage = 2;
+  const where = { limit: itemsPerPage, offset: 0 };
+  if (req.headers.page) where.offset = req.headers.page * itemsPerPage;
+
+  User.findAll(where)
+    .then(dbUsers => {
+      const toSendUsers = dbUsers.map(u => {
+        return { firstName: u.firstName, lastName: u.lastName, email: u.email };
+      });
+
+      return res
+        .status(200)
+        .json({ users: toSendUsers })
+        .end();
+    })
+    .catch(e => next(errors.databaseError('Database failed')));
+};
