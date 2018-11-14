@@ -1,9 +1,8 @@
 const User = require('../models').User,
   logger = require('../logger'),
-  jwt = require('jwt-simple'),
+  jwt = require('../services/jwt'),
   errors = require('../errors'),
-  bcryptService = require('../services/bcrypt'),
-  secret = require('../../config/index').common.session.secret;
+  bcryptService = require('../services/bcrypt');
 
 const errorMsgs = {
   nonExistingUser: 'User does not exist',
@@ -12,9 +11,8 @@ const errorMsgs = {
 };
 exports.badRequestErrorMessages = errorMsgs;
 
-exports.logIn = ({ user }, res, next) => {
-  const email = user.email;
-  User.find({ where: { email } })
+exports.logIn = ({ user }, res, next) =>
+  User.find({ where: { email: user.email } })
     .then(dbUser => {
       if (!dbUser) {
         throw errors.badRequest(errorMsgs.nonExistingUser);
@@ -24,17 +22,16 @@ exports.logIn = ({ user }, res, next) => {
             throw errors.badRequest(errorMsgs.invalidPassword);
           } else {
             const payload = { email: user.email };
-            const token = jwt.encode(payload, secret);
+            const token = jwt.encode(payload);
             res
               .status(200)
-              .json({ token })
+              .send(token)
               .end();
           }
         });
       }
     })
     .catch(next);
-};
 
 const emailIsRegistered = email =>
   User.count({ where: { email } }).catch(e => {

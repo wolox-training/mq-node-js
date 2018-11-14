@@ -5,7 +5,8 @@ const chai = require('chai'),
   errors = require('./../app/errors'),
   User = require('./../app/models').User,
   validationErrorMessages = require('./../app/middlewares/user').validationErrorMessages,
-  badRequestErrorMessages = require('./../app/controllers/user').badRequestErrorMessages;
+  badRequestErrorMessages = require('./../app/controllers/user').badRequestErrorMessages,
+  jwt = require('../app/services/jwt');
 
 const testEmail = 'someemail@wolox.com.ar',
   testPassword = 'somepassword1';
@@ -236,25 +237,19 @@ describe('/users POST', () => {
 
 describe('/users/sessions POST', () => {
   it('should successfully log in a user', done => {
-    signUpTestUser().then(res => {
-      // user should been successfully created
-      res.should.have.status(201);
-      User.count({ where: { email: testEmail } })
-        .then(count => {
-          should.equal(count, 1);
-        })
-        .then(() => {
-          chai
-            .request(server)
-            .post('/users/sessions')
-            .set('content-type', 'application/json')
-            .send({ email: testEmail, password: testPassword })
-            .then(r => {
-              should.exist(r.body.token);
-              should.not.equal(r.body.token, '', 'token shouldnt be empty');
-              dictum.chai(res);
-              done();
-            });
+    signUpTestUser().then(() => {
+      chai
+        .request(server)
+        .post('/users/sessions')
+        .set('content-type', 'application/json')
+        .send({ email: testEmail, password: testPassword })
+        .then(res => {
+          res.should.have.status(200);
+          should.exist(res.text);
+          const payload = jwt.decode(res.text);
+          should.exist(payload.email);
+          dictum.chai(res);
+          done();
         });
     });
   });
@@ -274,25 +269,17 @@ describe('/users/sessions POST', () => {
   });
 
   it('should not login a user because the password is invalid', done => {
-    signUpTestUser().then(res => {
-      // user should been successfully created
-      res.should.have.status(201);
-      User.count({ where: { email: testEmail } })
-        .then(count => {
-          should.equal(count, 1);
-        })
-        .then(() => {
-          chai
-            .request(server)
-            .post('/users/sessions')
-            .set('content-type', 'application/json')
-            .send({ email: testEmail, password: `${testPassword}2` })
-            .catch(e => {
-              should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
-              should.equal(e.status, 400);
-              should.equal(e.response.body.message, badRequestErrorMessages.invalidPassword);
-              done();
-            });
+    signUpTestUser().then(() => {
+      chai
+        .request(server)
+        .post('/users/sessions')
+        .set('content-type', 'application/json')
+        .send({ email: testEmail, password: `${testPassword}2` })
+        .catch(e => {
+          should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
+          should.equal(e.status, 400);
+          should.equal(e.response.body.message, badRequestErrorMessages.invalidPassword);
+          done();
         });
     });
   });
