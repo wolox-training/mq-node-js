@@ -87,7 +87,7 @@ describe('/users GET', () => {
           .send()
           .then(userListResponse => {
             const emailsInPage = userListResponse.body.users.map(u => u.email);
-            expect(emailsInPage).to.containSubset(emails);
+            expect(emails).to.containSubset(emailsInPage);
             expect(emailsInPage.length).to.equal(usersPerPage);
             done();
           })
