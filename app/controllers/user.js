@@ -37,6 +37,30 @@ exports.logIn = ({ user }, res, next) => {
     .catch(next);
 };
 
+exports.badRequestErrorMessages = errorMsgs;
+
+exports.logIn = ({ user }, res, next) =>
+  User.find({ where: { email: user.email } })
+    .then(dbUser => {
+      if (!dbUser) {
+        throw errors.badRequest(errorMsgs.nonExistingUser);
+      } else {
+        return bcryptService.isPasswordValid(user.password, dbUser).then(validPassword => {
+          if (!validPassword) {
+            throw errors.badRequest(errorMsgs.invalidPassword);
+          } else {
+            const payload = { email: user.email };
+            const token = jwt.encode(payload);
+            res
+              .status(200)
+              .send(token)
+              .end();
+          }
+        });
+      }
+    })
+    .catch(next);
+
 const emailIsRegistered = email =>
   User.count({ where: { email } }).catch(e => {
     throw errors.databaseError(e.message);
