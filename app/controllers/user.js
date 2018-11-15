@@ -83,6 +83,8 @@ exports.signUp = ({ user }, res, next) =>
     })
     .catch(next);
 
+exports.usersPerPage = 2;
+
 exports.listUsers = (req, res, next) => {
   try {
     const decoded = jwt.decode(req.headers.token);
@@ -90,9 +92,8 @@ exports.listUsers = (req, res, next) => {
     next(errors.badRequest(errorMsgs.invalidToken));
     return;
   }
-  const itemsPerPage = 2;
-  const where = { limit: itemsPerPage, offset: 0 };
-  if (req.headers.page) where.offset = req.headers.page * itemsPerPage;
+  const where = { limit: exports.usersPerPage, offset: 0 };
+  if (req.headers.page) where.offset = req.headers.page * exports.usersPerPage;
 
   User.findAll(where)
     .then(dbUsers => {
