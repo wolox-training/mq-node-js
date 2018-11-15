@@ -1,10 +1,11 @@
 const userController = require('./controllers/user'),
   {
     validateEmail,
+    validateLogin,
+    validatePassword,
     validateFirstName,
     validateLastName,
-    validateSignUp,
-    validatePassword
+    validateSignUp
   } = require('./middlewares/user');
 
 exports.init = app => {
@@ -13,4 +14,6 @@ exports.init = app => {
     [validateFirstName, validateLastName, validateEmail, validatePassword, validateSignUp],
     userController.signUp
   );
+
+  app.post('/users/sessions', [validateEmail, validatePassword, validateLogin], userController.logIn);
 };

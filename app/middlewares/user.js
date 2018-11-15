@@ -1,6 +1,4 @@
 const { body, check, validationResult } = require('express-validator/check'),
-  User = require('../models').User,
-  logger = require('../logger'),
   errors = require('../errors');
 
 exports.validationErrorMessages = {
@@ -57,6 +55,12 @@ const validateErrors = (req, res, next) => {
   else {
     throw errors.badRequest(validationErrors);
   }
+};
+
+exports.validateLogin = (req, res, next) => {
+  const { email, password } = req.body;
+  req.user = { email, password };
+  validateErrors(req, res, next);
 };
 
 exports.validateSignUp = (req, res, next) => {
