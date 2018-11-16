@@ -1,4 +1,4 @@
-const { body, header, validationResult } = require('express-validator/check'),
+const { body, header, validationResult, query } = require('express-validator/check'),
   errors = require('../errors');
 
 const errorMsgs = {
@@ -11,9 +11,7 @@ const errorMsgs = {
   passwordMustBeAlphanumeric: 'Password must be alphanumeric',
   passwordIsRequired: 'The password is required',
   tokenIsRequired: 'Token is required',
-  tokenCantBeEmpty: 'Token cant be empty',
-  pageCantBeEmpty: 'Page cant be empty',
-  pageMustBeANumber: 'Page must be a number'
+  tokenCantBeEmpty: 'Token cant be empty'
 };
 
 exports.validationErrorMessages = errorMsgs;
@@ -81,11 +79,3 @@ exports.validateToken = header('token')
   .not()
   .isEmpty()
   .withMessage(errorMsgs.tokenCantBeEmpty);
-
-exports.validatePage = header('page')
-  .optional()
-  .not()
-  .isEmpty()
-  .withMessage(errorMsgs.pageCantBeEmpty)
-  .isNumeric()
-  .withMessage(errorMsgs.pageMustBeANumber);

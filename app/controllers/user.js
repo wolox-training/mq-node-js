@@ -14,8 +14,7 @@ const errorMsgs = {
 exports.badRequestErrorMessages = errorMsgs;
 
 exports.logIn = ({ user }, res, next) => {
-  const email = user.email;
-  User.find({ where: { email } })
+  User.find({ where: { email: user.email } })
     .then(dbUser => {
       if (!dbUser) {
         throw errors.badRequest(errorMsgs.nonExistingUser);
@@ -83,19 +82,20 @@ exports.signUp = ({ user }, res, next) =>
     })
     .catch(next);
 
-exports.usersPerPage = 2;
-
 exports.listUsers = (req, res, next) => {
   try {
-    const decoded = jwt.decode(req.headers.token);
+    jwt.decode(req.headers.token);
   } catch (e) {
     next(errors.badRequest(errorMsgs.invalidToken));
     return;
   }
-  const where = { limit: exports.usersPerPage, offset: 0 };
-  if (req.headers.page) where.offset = req.headers.page * exports.usersPerPage;
 
-  User.findAll(where)
+  req.query.page = Number.parseInt(req.query.page);
+  if (!Number.isSafeInteger(req.query.page)) req.query.page = 0;
+
+  req.query.limit = Number.parseInt(req.query.limit);
+  if (!Number.isSafeInteger(req.query.limit)) req.query.limit = process.env.DEFAULT_ITEMS_PER_PAGE;
+  return User.findAll({ limit: req.query.limit, offset: req.query.page * req.query.limit })
     .then(dbUsers => {
       const toSendUsers = dbUsers.map(u => {
         return { firstName: u.firstName, lastName: u.lastName, email: u.email };
@@ -103,8 +103,8 @@ exports.listUsers = (req, res, next) => {
 
       return res
         .status(200)
-        .json({ users: toSendUsers })
+        .send({ users: toSendUsers })
         .end();
     })
-    .catch(e => next(errors.databaseError('Database failed')));
+    .catch(e => console.log(`\n\n\n${e}\n\n\n`)); // next(errors.databaseError('Database failed')));
 };

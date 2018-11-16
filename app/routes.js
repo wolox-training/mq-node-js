@@ -6,7 +6,6 @@ const userController = require('./controllers/user'),
     validateFirstName,
     validateLastName,
     validateSignUp,
-    validatePage,
     validateToken,
     validateErrors
   } = require('./middlewares/user');
@@ -20,5 +19,5 @@ exports.init = app => {
 
   app.post('/users/sessions', [validateEmail, validatePassword, validateLogin], userController.logIn);
 
-  app.get('/users', [validatePage, validateToken, validateErrors], userController.listUsers);
+  app.get('/users', [validateToken, validateErrors], userController.listUsers);
 };

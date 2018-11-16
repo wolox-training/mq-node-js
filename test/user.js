@@ -9,7 +9,7 @@ const chai = require('chai'),
   badRequestErrorMessages = require('./../app/controllers/user').badRequestErrorMessages,
   validationErrorMsgs = require('./../app/middlewares/user').validationErrorMessages,
   jwt = require('../app/services/jwt'),
-  usersPerPage = require('./../app/controllers/user').usersPerPage;
+  itemsPerPage = Number.parseInt(process.env.DEFAULT_ITEMS_PER_PAGE);
 
 chai.use(chaiSubset);
 
@@ -53,9 +53,15 @@ const logInAndReturnToken = email =>
 const getUsersEmailsInPage = (token, page) =>
   chai
     .request(server)
-    .get('/users')
+    .get(`/users?page=${page}`)
     .set('token', token)
-    .set('page', page)
+    .send()
+    .then(userListResponse => userListResponse.body.users.map(u => u.email));
+const getUsersEmailsInPageWithLimit = (token, page, limit) =>
+  chai
+    .request(server)
+    .get(`/users?page=${page}$limit=${limit}`)
+    .set('token', token)
     .send()
     .then(userListResponse => userListResponse.body.users.map(u => u.email));
 
@@ -88,15 +94,15 @@ describe('/users GET', () => {
           .then(userListResponse => {
             const emailsInPage = userListResponse.body.users.map(u => u.email);
             expect(emails).to.containSubset(emailsInPage);
-            expect(emailsInPage.length).to.equal(usersPerPage);
+            expect(emailsInPage.length).to.equal(itemsPerPage);
             done();
           })
       )
     );
   });
 
-  it('it should only return the the amount of users per page', done => {
-    signUpMultipleUsers(usersPerPage + 1).then(emails =>
+  it('should only return the the amount of users per page', done => {
+    signUpMultipleUsers(itemsPerPage + 1).then(emails =>
       logInAndReturnToken(emails[0]).then(token =>
         chai
           .request(server)
@@ -106,7 +112,7 @@ describe('/users GET', () => {
           .then(userListResponse => {
             const emailListResponse = userListResponse.body.users.map(u => u.email);
             expect(alreadyUsedEmails).to.containSubset(emailListResponse);
-            expect(emailListResponse.length).to.equal(usersPerPage);
+            expect(emailListResponse.length).to.equal(itemsPerPage);
             done();
           })
       )
@@ -114,34 +120,53 @@ describe('/users GET', () => {
   });
 
   it('should return diferent emails in diferent pages', done => {
-    signUpMultipleUsers(usersPerPage * 2).then(emails =>
+    signUpMultipleUsers(itemsPerPage * 2).then(emails =>
       logInAndReturnToken(emails[0]).then(token =>
         Promise.all([getUsersEmailsInPage(token, 0), getUsersEmailsInPage(token, 1)]).then(pages => {
           const firstPageEmails = pages[0];
           const secondPageEmails = pages[1];
-          expect(firstPageEmails.length).to.equal(usersPerPage);
-          expect(secondPageEmails.length).to.equal(usersPerPage);
+
+          expect(firstPageEmails.length).to.equal(itemsPerPage);
+          expect(secondPageEmails.length).to.equal(itemsPerPage);
+
           firstPageEmails.forEach(email => expect(secondPageEmails).to.not.contain(email));
           secondPageEmails.forEach(email => expect(firstPageEmails).to.not.contain(email));
+
           done();
         })
       )
     );
   });
 
-  it('when registering usersPerPage + 1 users, page 1 should contain 1 element', done => {
-    signUpMultipleUsers(usersPerPage + 1).then(emails =>
+  it('when registering itemsPerPage + 1 users, page 1 should contain 1 element', done => {
+    signUpMultipleUsers(itemsPerPage + 1).then(emails =>
       logInAndReturnToken(emails[0]).then(token =>
         chai
           .request(server)
-          .get('/users')
+          .get(`/users?page=1`)
           .set('token', token)
-          .set('page', 1)
           .send()
           .then(userListResponse => {
             const emailListResponse = userListResponse.body.users.map(u => u.email);
             expect(alreadyUsedEmails).to.containSubset(emailListResponse);
             expect(emailListResponse.length).to.equal(1);
+            done();
+          })
+      )
+    );
+  });
+
+  it('should return limit users per page when specifying it', done => {
+    const limit = 5;
+    signUpMultipleUsers(limit).then(emails =>
+      logInAndReturnToken(emails[0]).then(token =>
+        chai
+          .request(server)
+          .get(`/users?limit=${limit}`)
+          .set('token', token)
+          .send()
+          .then(userListResponse => {
+            expect(userListResponse.body.users.length).to.equal(limit);
             done();
           })
       )
@@ -184,51 +209,38 @@ describe('/users GET', () => {
       });
   });
 
-  it('should fail because page is empty', done => {
-    signUpTestUserAndReturnEmail()
-      .then(email => logInAndReturnToken(email))
-      .then(token =>
+  it('should return page 0 because page is empty', done => {
+    signUpTestUserAndReturnEmail().then(email =>
+      logInAndReturnToken(email).then(token =>
         chai
           .request(server)
           .get('/users')
           .set('token', token)
           .set('page', '')
           .send()
-          .catch(e => {
-            should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
-            should.equal(e.status, 400);
-            expect(e.response.body.message.length).to.equal(
-              2,
-              'We should expect two messages indicating the page must be a number and not empty'
-            );
-            expect(e.response.body.message).to.include(validationErrorMsgs.pageCantBeEmpty);
-            expect(e.response.body.message).to.include(validationErrorMsgs.pageMustBeANumber);
+          .then(res => {
+            expect(res.body.users.map(u => u.email)).to.contain(email);
             done();
           })
-      );
+      )
+    );
   });
 
-  it('should fail because page is not a number', done => {
-    signUpTestUserAndReturnEmail()
-      .then(email => logInAndReturnToken(email))
-      .then(token =>
+  it('should return page 0 because page is not a number', done => {
+    signUpTestUserAndReturnEmail().then(email =>
+      logInAndReturnToken(email).then(token =>
         chai
           .request(server)
           .get('/users')
           .set('token', token)
           .set('page', 'not a number')
           .send()
-          .catch(e => {
-            should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
-            should.equal(e.status, 400);
-            expect(e.response.body.message.length).to.equal(
-              1,
-              'We should expect one message indicating the page must be a number'
-            );
-            expect(e.response.body.message).to.include(validationErrorMsgs.pageMustBeANumber);
+          .then(res => {
+            expect(res.body.users.map(u => u.email)).to.contain(email);
             done();
           })
-      );
+      )
+    );
   });
 });
 
