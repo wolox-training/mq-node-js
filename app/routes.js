@@ -30,4 +30,10 @@ exports.init = app => {
     [validateToken, validateUserId, validateErrors],
     albumsController.listPurchasedAlbums
   );
+
+  app.get(
+    '/users/albums/:id/photos',
+    [validateToken, validateAlbumId, validateErrors],
+    albumsController.listAlbumPhotos
+  );
 };
