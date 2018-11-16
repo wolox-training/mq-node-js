@@ -106,5 +106,5 @@ exports.listUsers = (req, res, next) => {
         .send({ users: toSendUsers })
         .end();
     })
-    .catch(e => console.log(`\n\n\n${e}\n\n\n`)); // next(errors.databaseError('Database failed')));
+    .catch(e => next(errors.databaseError('Database failed')));
 };

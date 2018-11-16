@@ -1,4 +1,5 @@
 const userController = require('./controllers/user'),
+  albumsController = require('./controllers/album'),
   {
     validateEmail,
     validateLogin,
@@ -20,4 +21,5 @@ exports.init = app => {
   app.post('/users/sessions', [validateEmail, validatePassword, validateLogin], userController.logIn);
 
   app.get('/users', [validateToken, validateErrors], userController.listUsers);
+  app.get('/albums', [validateToken, validateErrors], albumsController.listAlbums);
 };
