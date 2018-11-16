@@ -5,20 +5,28 @@ const jwt = require('../services/jwt'),
   errors = require('../errors'),
   PurchasedAlbum = require('../models').PurchasedAlbum;
 
-let albums;
+const errorMsgs = {
+  inexistentAlbum: 'Inexistent album',
+  albumAlreadyPruchased: 'The album was already purchased'
+};
 
+exports.validationErrorMessages = errorMsgs;
+
+let albumsDataBase;
 const getAlbums = () => {
-  if (albums) return Promise.resolve(albums);
+  if (albumsDataBase) return Promise.resolve(albumsDataBase);
   // lazy initialization
   return request({ uri: albumsUri, json: true })
     .then(res => {
-      albums = res;
-      return albums;
+      albumsDataBase = res;
+      return albumsDataBase;
     })
     .catch(e => {
       throw errors.resourceNotFound('albums not available');
     });
 };
+
+const getAlbum = albumId => getAlbums().then(albums => albums.find(a => a.id === albumId));
 
 exports.listAlbums = (req, res, next) =>
   getUserForToken(req.headers.token)
@@ -28,17 +36,40 @@ exports.listAlbums = (req, res, next) =>
 exports.purchaseAlbum = (req, res, next) =>
   getUserForToken(req.headers.token).then(user => {
     const albumId = Number.parseInt(req.params.id);
-    PurchasedAlbum.find({ where: { albumId, userId: user.id } })
-      .then(existingAlbum => {
-        if (existingAlbum) throw errors.badRequest('The album was already purchased');
-        else {
-          return PurchasedAlbum.createModel({ albumId, userId: user.id }).then(indbPurchasedAlbum => {
-            res
-              .status(201)
-              .send(indbPurchasedAlbum)
-              .end();
-          });
-        }
+
+    return getAlbum(albumId)
+      .then(album => {
+        if (!album) throw errors.badRequest('Inexsiting album');
+        return album;
       })
+      .then(album =>
+        PurchasedAlbum.find({ where: { albumId: album.id, userId: user.id } }).then(existingAlbum => {
+          if (existingAlbum) throw errors.badRequest('The album was already purchased');
+          else {
+            return PurchasedAlbum.createModel({ albumId, userId: user.id }).then(indbPurchasedAlbum => {
+              res
+                .status(201)
+                .send(indbPurchasedAlbum)
+                .end();
+            });
+          }
+        })
+      )
       .catch(next);
   });
+
+exports.listPurchasedAlbums = (req, res, next) =>
+  getUserForToken(req.headers.token)
+    .then(user => {
+      const userId = Number.parseInt(req.params.userId);
+      if (!user.isAdmin && userId !== user.id)
+        throw errors.badRequest('Non admin users can only access their own purchased albums');
+
+      return PurchasedAlbum.findAll({ where: { userId: user.id } }).then(albums =>
+        res
+          .status(200)
+          .send(albums)
+          .end()
+      );
+    })
+    .catch(next);

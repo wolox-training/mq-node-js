@@ -7,6 +7,7 @@ const userController = require('./controllers/user'),
     validateFirstName,
     validateLastName,
     validateSignUp,
+    validateUserId,
     validateToken,
     validateErrors
   } = require('./middlewares/user'),
@@ -24,4 +25,9 @@ exports.init = app => {
   app.get('/users', [validateToken, validateErrors], userController.listUsers);
   app.get('/albums', [validateToken, validateErrors], albumsController.listAlbums);
   app.post('/albums/:id', [validateToken, validateAlbumId, validateErrors], albumsController.purchaseAlbum);
+  app.get(
+    '/users/:userId/albums',
+    [validateToken, validateUserId, validateErrors],
+    albumsController.listPurchasedAlbums
+  );
 };
