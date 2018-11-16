@@ -108,3 +108,15 @@ exports.listUsers = (req, res, next) => {
     })
     .catch(e => next(errors.databaseError('Database failed')));
 };
+
+exports.getUserForToken = token => {
+  try {
+    const payload = jwt.decode(token);
+    return User.find({ where: { email: payload.email } }).then(user => {
+      if (!user) throw errors.internalServerError('Token is referencing non-existing user');
+      return user;
+    });
+  } catch (e) {
+    throw errors.badRequest(errorMsgs.invalidToken);
+  }
+};

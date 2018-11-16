@@ -49,6 +49,8 @@
     "morgan": "^1.9.0",
     "pg": "^7.4.1",
     "pg-native": "^2.2.0",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.5",
     "rollbar": "^2.3.9",
     "sequelize": "^4.34.0",
     "umzug": "^2.1.0",
