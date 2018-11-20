@@ -369,4 +369,33 @@ describe('/users/sessions POST', () => {
         done();
       });
   });
+
+  it('should fail because the session has expired', done => {
+    signUpTestUserAsAdmin()
+      .then(user => logInAndReturnToken(user.email))
+      .then(token =>
+        setTimeout(
+          () =>
+            chai
+              .request(server)
+              .post('/admin/users')
+              .set('content-type', 'application/json')
+              .set('token', token)
+              .send({
+                firstName: 'name',
+                lastName: 'surname',
+                email: getNotUsedEmail(),
+                password: testPassword
+              })
+              .catch(e => {
+                should.equal(e.response.body.internal_code, errors.AUTHENTICATION_ERROR);
+                should.equal(e.status, 401);
+                expect(e.response.body.message).to.equal('Token expired');
+                done();
+              }),
+
+          3000
+        )
+      );
+  });
 });

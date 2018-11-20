@@ -22,7 +22,7 @@ exports.logIn = ({ user }, res, next) =>
           if (!validPassword) {
             throw errors.badRequest(errorMsgs.invalidPassword);
           } else {
-            const payload = { email: user.email };
+            const payload = { email: user.email, timestamp: Date.now() };
             const token = jwt.encode(payload);
             res
               .status(200)
@@ -63,11 +63,6 @@ exports.createAdmin = (req, res, next) =>
   jwt
     .getUserForToken(req.headers.token)
     .then(requestingUser => {
-      if (!requestingUser) {
-        // correctly decoded token belongs to no user, perhaps it was deleted without invalidating token?
-        throw errors.internalServerError();
-      }
-
       if (!requestingUser.isAdmin) throw errors.badRequest(errorMsgs.insufficientPermissions);
 
       return User.find({ where: { email: req.user.email } }).then(inDbUser => {
