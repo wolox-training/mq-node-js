@@ -8,6 +8,7 @@ const fs = require('fs'),
 
 let sequelize;
 if (process.env.DATABASE_URL) {
+  console.log(`initializing heroku sequelize with port ${process.env.PORT}`);
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     protocol: 'postgres',
