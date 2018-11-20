@@ -7,26 +7,32 @@ const jwt = require('../services/jwt'),
 
 const errorMsgs = {
   inexistentAlbum: 'Inexistent album',
-  albumAlreadyPruchased: 'The album was already purchased'
+  albumAlreadyPruchased: 'The album was already purchased',
+  albumsNotAvailable: 'Albums not available'
 };
 
 exports.validationErrorMessages = errorMsgs;
 
-let albumsDataBase;
-const getAlbums = () => {
-  if (albumsDataBase) return Promise.resolve(albumsDataBase);
-  // lazy initialization
-  return request({ uri: albumsUri, json: true })
-    .then(res => {
-      albumsDataBase = res;
-      return albumsDataBase;
-    })
-    .catch(e => {
-      throw errors.resourceNotFound('albums not available');
+const getAlbums = albumIds => {
+  let requestUri = albumsUri;
+
+  if (albumIds) {
+    requestUri += '?';
+    albumIds.forEach(albumId => {
+      requestUri += `albumId=${albumId}`;
     });
+  }
+
+  return request({ uri: albumsUri, json: true }).catch(e => {
+    throw errors.resourceNotFound(errorMsgs.albumsNotAvailable);
+  });
 };
 
-const getAlbum = albumId => getAlbums().then(albums => albums.find(a => a.id === albumId));
+// const getAlbum = albumId => getAlbums().then(albums => albums.find(a => a.id === albumId));
+/* const getAlbum = albumId =>
+  request({ uri: `${albumsUri}?albumId=${albumId}` }).catch(e => {
+    throw errors.resourceNotFound('album not available');
+  }); */
 
 exports.listAlbums = (req, res, next) =>
   getUserForToken(req.headers.token)
@@ -37,7 +43,7 @@ exports.purchaseAlbum = (req, res, next) =>
   getUserForToken(req.headers.token).then(user => {
     const albumId = Number.parseInt(req.params.id);
 
-    return getAlbum(albumId)
+    return getAlbums([albumId])
       .then(album => {
         if (!album) throw errors.badRequest('Inexsiting album');
         return album;
