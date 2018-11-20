@@ -8,7 +8,8 @@ const statusCodes = {
   [errors.DEFAULT_ERROR]: 500,
   [errors.BAD_REQUEST]: 400,
   [errors.EMAIL_IS_NOT_REGISTERED]: 400,
-  [errors.EMAIL_IS_REGISTERED]: 400
+  [errors.EMAIL_IS_REGISTERED]: 400,
+  [errors.INTERNAL_SERVER_ERROR]: 500
 };
 
 exports.handle = (error, req, res, next) => {

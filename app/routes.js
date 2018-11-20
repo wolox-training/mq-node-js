@@ -16,8 +16,11 @@ exports.init = app => {
     [validateFirstName, validateLastName, validateEmail, validatePassword, validateSignUp],
     userController.signUp
   );
-
   app.post('/users/sessions', [validateEmail, validatePassword, validateLogin], userController.logIn);
-
   app.get('/users', [validateToken, validateErrors], userController.listUsers);
+  app.post(
+    '/admin/users',
+    [validateToken, validateFirstName, validateLastName, validateEmail, validatePassword, validateSignUp],
+    userController.createAdmin
+  );
 };

@@ -1,4 +1,4 @@
-const { body, header, validationResult, query } = require('express-validator/check'),
+const { body, header, validationResult } = require('express-validator/check'),
   errors = require('../errors');
 
 const errorMsgs = {
