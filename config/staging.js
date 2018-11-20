@@ -1,9 +1,8 @@
 exports.config = {
   environment: 'staging',
   isStage: true,
+  use_env_variable: 'DATABASE_URL',
   common: {
-    database: {
-      connectionString: process.env.DATABASE_URL
-    }
+    port: process.env.PORT
   }
 };
