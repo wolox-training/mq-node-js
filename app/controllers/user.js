@@ -83,16 +83,19 @@ exports.createAdmin = (req, res, next) =>
         if (inDbUser) {
           // inDbUser should be updated to be admin...
           return bcryptService.hashPassword(req.user.password).then(hashedPassword => {
-            inDbUser.firstName = req.user.firstName;
-            inDbUser.lastName = req.user.lastName;
-            inDbUser.password = hashedPassword;
-            inDbUser.isAdmin = true;
-            inDbUser.save().then(() => {
-              res
-                .status(200)
-                .send(inDbUser)
-                .end();
-            });
+            inDbUser
+              .update({
+                firstName: req.user.firstName,
+                lastName: req.user.lastName,
+                password: hashedPassword,
+                isAdmin: true
+              })
+              .then(updated =>
+                res
+                  .status(200)
+                  .send(updated)
+                  .end()
+              );
           });
         } else {
           // user should be created from scratch but with admin privilges...
