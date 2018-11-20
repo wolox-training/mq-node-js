@@ -28,12 +28,6 @@ const getAlbums = albumIds => {
   });
 };
 
-// const getAlbum = albumId => getAlbums().then(albums => albums.find(a => a.id === albumId));
-/* const getAlbum = albumId =>
-  request({ uri: `${albumsUri}?albumId=${albumId}` }).catch(e => {
-    throw errors.resourceNotFound('album not available');
-  }); */
-
 exports.listAlbums = (req, res, next) =>
   getUserForToken(req.headers.token)
     .then(user => getAlbums().then(r => res.status(200).send(r)))
