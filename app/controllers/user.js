@@ -62,8 +62,8 @@ exports.signUp = ({ user }, res, next) =>
 
 const getUserForToken = token => {
   try {
-    const decoded = jwt.decode(token);
-    return User.find({ where: { email: decoded.email } });
+    const { email } = jwt.decode(token);
+    return User.find({ where: { email } });
   } catch (e) {
     throw errors.badRequest(errorMsgs.invalidToken);
   }
