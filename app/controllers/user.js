@@ -13,7 +13,7 @@ const errorMsgs = {
 };
 exports.badRequestErrorMessages = errorMsgs;
 
-exports.logIn = ({ user }, res, next) => {
+exports.logIn = ({ user }, res, next) =>
   User.find({ where: { email: user.email } })
     .then(dbUser => {
       if (!dbUser) {
@@ -34,7 +34,6 @@ exports.logIn = ({ user }, res, next) => {
       }
     })
     .catch(next);
-};
 
 exports.badRequestErrorMessages = errorMsgs;
 
