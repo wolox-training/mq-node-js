@@ -22,11 +22,9 @@ exports.logIn = ({ user }, res, next) =>
           if (!validPassword) {
             throw errors.badRequest(errorMsgs.invalidPassword);
           } else {
-            const payload = { email: user.email, timestamp: Date.now() };
-            const token = jwt.encode(payload);
             res
               .status(200)
-              .send(token)
+              .send(jwt.generateTokenForUser(dbUser))
               .end();
           }
         });
@@ -95,4 +93,11 @@ exports.createAdmin = (req, res, next) =>
         }
       });
     })
+    .catch(next);
+
+exports.invalidateAllTokens = (req, res, next) =>
+  jwt
+    .getUserForToken(req.headers.token)
+    .then(user => jwt.invalidateAllTokensForUser(user))
+    .then(() => res.status(200).end())
     .catch(next);

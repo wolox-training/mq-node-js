@@ -22,4 +22,6 @@ exports.init = app => {
     [validateToken, validateFirstName, validateLastName, validateEmail, validatePassword, validateSignUp],
     userController.createAdmin
   );
+
+  app.post('/users/sessions/invalidate_all', [validateToken], userController.invalidateAllTokens);
 };

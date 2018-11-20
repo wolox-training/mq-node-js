@@ -399,3 +399,38 @@ describe('/users/sessions POST', () => {
       );
   });
 });
+
+describe('/users/sessions/invalidate_all POST', () => {
+  it.only('should successfully clear all users tokens and old token should not work a user', done => {
+    signUpTestUserAsAdmin()
+      .then(dbUser => logInAndReturnToken(dbUser.email))
+      .then(token =>
+        chai
+          .request(server)
+          .post('/users/sessions/invalidate_all')
+          .set('token', token)
+          .then(res => {
+            res.should.have.status(200);
+          })
+          .then(() =>
+            chai
+              .request(server)
+              .post('/admin/users')
+              .set('content-type', 'application/json')
+              .set('token', token)
+              .send({
+                firstName: 'name',
+                lastName: 'surname',
+                email: getNotUsedEmail(),
+                password: testPassword
+              })
+              .catch(e => {
+                should.equal(e.response.body.internal_code, errors.AUTHENTICATION_ERROR);
+                should.equal(e.status, 401);
+                expect(e.response.body.message).to.equal('Token expired');
+                done();
+              })
+          )
+      );
+  });
+});
