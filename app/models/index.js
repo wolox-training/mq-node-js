@@ -11,9 +11,7 @@ if (process.env.DATABASE_URL) {
   console.log(`initializing heroku sequelize with port ${process.env.PORT}`);
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
-    protocol: 'postgres',
-    port: process.env.PORT,
-    logging: true // false
+    protocol: 'postgres'
   });
 } else {
   // the application is executed on the local machine ... use mysql
