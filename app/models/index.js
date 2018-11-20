@@ -6,7 +6,17 @@ const fs = require('fs'),
   dbConfig = require('../../config/db')[config.environment],
   db = {};
 
-const sequelize = new Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, dbConfig);
+let sequelize;
+if (process.env.DATABASE_URL) {
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres',
+    protocol: 'postgres',
+    logging: true // false
+  });
+} else {
+  // the application is executed on the local machine ... use mysql
+  sequelize = new Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, dbConfig);
+}
 
 fs
   .readdirSync(__dirname)
