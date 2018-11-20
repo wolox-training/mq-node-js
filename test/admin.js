@@ -40,8 +40,7 @@ const signUpTestUserAsAdmin = () =>
   signUpTestUserAndReturnEmail().then(signedUpEmail =>
     User.find({ where: { email: signedUpEmail } }).then(dbUser => {
       // set this created user to be admin.
-      dbUser.isAdmin = true;
-      return dbUser.save();
+      return dbUser.update({ isAdmin: true });
     })
   );
 
