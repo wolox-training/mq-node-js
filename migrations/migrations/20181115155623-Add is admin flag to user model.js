@@ -7,5 +7,5 @@ module.exports = {
       defaultValue: false,
       type: Sequelize.BOOLEAN
     }),
-  down: (queryInterface, Sequelize) => queryInterface.removeColumn('Todo', 'isAdmin')
+  down: (queryInterface, Sequelize) => queryInterface.removeColumn('Users', 'isAdmin')
 };

@@ -9,7 +9,7 @@ const errorMsgs = {
   invalidPassword: 'Invalid password',
   invalidToken: 'Invalid Token',
   emailIsAlreadyRegistered: 'email is already registered',
-  insufficientPermissions: 'Insufficient Permissions'
+  insufficientPermissions: 'User is not authorized'
 };
 exports.badRequestErrorMessages = errorMsgs;
 
