@@ -7,7 +7,6 @@ const User = require('../models').User,
 const errorMsgs = {
   nonExistingUser: 'User does not exist',
   invalidPassword: 'Invalid password',
-  invalidToken: 'Invalid Token',
   emailIsAlreadyRegistered: 'email is already registered',
   insufficientPermissions: 'User is not authorized'
 };
@@ -60,17 +59,9 @@ exports.signUp = ({ user }, res, next) =>
     })
     .catch(next);
 
-const getUserForToken = token => {
-  try {
-    const { email } = jwt.decode(token);
-    return User.find({ where: { email } });
-  } catch (e) {
-    throw errors.badRequest(errorMsgs.invalidToken);
-  }
-};
-
 exports.createAdmin = (req, res, next) =>
-  getUserForToken(req.headers.token)
+  jwt
+    .getUserForToken(req.headers.token)
     .then(requestingUser => {
       if (!requestingUser) {
         // correctly decoded token belongs to no user, perhaps it was deleted without invalidating token?
