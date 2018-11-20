@@ -129,13 +129,6 @@ exports.createAdmin = (req, res, next) =>
     .catch(next);
 
 exports.listUsers = (req, res, next) => {
-  try {
-    jwt.decode(req.headers.token);
-  } catch (e) {
-    next(errors.badRequest(errorMsgs.invalidToken));
-    return;
-  }
-
   req.query.page = Number.parseInt(req.query.page);
   if (!Number.isSafeInteger(req.query.page)) req.query.page = 0;
 

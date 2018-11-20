@@ -1,5 +1,6 @@
 const { body, header, validationResult } = require('express-validator/check'),
-  errors = require('../errors');
+  errors = require('../errors'),
+  jwt = require('../services/jwt');
 
 const errorMsgs = {
   emailIsRequired: 'The email is required',
@@ -11,7 +12,8 @@ const errorMsgs = {
   passwordMustBeAlphanumeric: 'Password must be alphanumeric',
   passwordIsRequired: 'The password is required',
   tokenIsRequired: 'Token is required',
-  tokenCantBeEmpty: 'Token cant be empty'
+  tokenCantBeEmpty: 'Token cant be empty',
+  tokenIsInvalid: 'Token is invalid'
 };
 
 exports.validationErrorMessages = errorMsgs;
@@ -79,3 +81,12 @@ exports.validateToken = header('token')
   .not()
   .isEmpty()
   .withMessage(errorMsgs.tokenCantBeEmpty);
+
+exports.validateTokenCanBeDecoded = (req, res, next) => {
+  try {
+    jwt.decode(req.headers.token);
+    next();
+  } catch (e) {
+    next(errors.badRequest(errorMsgs.tokenIsInvalid));
+  }
+};

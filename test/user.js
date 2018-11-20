@@ -189,7 +189,7 @@ describe('/users GET', () => {
     );
   });
 
-  it('should only return the the amount of users per page', done => {
+  it('should only return the the amount of users per page set in the environment variable DEFAULT_ITEMS_PER_PAGE ', done => {
     signUpMultipleUsers(itemsPerPage + 1).then(emails =>
       logInAndReturnToken(emails[0]).then(token =>
         chai
@@ -292,7 +292,7 @@ describe('/users GET', () => {
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
-        expect(e.response.body.message).to.equal(badRequestErrorMessages.invalidToken);
+        expect(e.response.body.message).to.equal(validationErrorMsgs.tokenIsInvalid);
         done();
       });
   });
