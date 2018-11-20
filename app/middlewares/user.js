@@ -1,5 +1,6 @@
 const { body, header, validationResult } = require('express-validator/check'),
-  errors = require('../errors');
+  errors = require('../errors'),
+  jwt = require('../services/jwt');
 
 const errorMsgs = {
   emailIsRequired: 'The email is required',
@@ -11,7 +12,8 @@ const errorMsgs = {
   passwordMustBeAlphanumeric: 'Password must be alphanumeric',
   passwordIsRequired: 'The password is required',
   tokenIsRequired: 'Token is required',
-  tokenCantBeEmpty: 'Token cant be empty'
+  tokenCantBeEmpty: 'Token cant be empty',
+  tokenIsInvalid: 'Token is invalid'
 };
 
 exports.validationErrorMessages = errorMsgs;
@@ -51,7 +53,7 @@ exports.validatePassword = body('password')
   .matches(/\d/)
   .withMessage(errorMsgs.passwordMustBeAlphanumeric);
 
-const validateErrors = (req, res, next) => {
+exports.validateErrors = (req, res, next) => {
   const validationErrors = validationResult(req)
     .array()
     .map(e => e.msg);
@@ -64,13 +66,13 @@ const validateErrors = (req, res, next) => {
 exports.validateLogin = (req, res, next) => {
   const { email, password } = req.body;
   req.user = { email, password };
-  validateErrors(req, res, next);
+  exports.validateErrors(req, res, next);
 };
 
 exports.validateSignUp = (req, res, next) => {
   const { firstName, lastName, email, password } = req.body;
   req.user = { firstName, lastName, email, password };
-  validateErrors(req, res, next);
+  exports.validateErrors(req, res, next);
 };
 
 exports.validateToken = header('token')
@@ -79,3 +81,12 @@ exports.validateToken = header('token')
   .not()
   .isEmpty()
   .withMessage(errorMsgs.tokenCantBeEmpty);
+
+exports.validateTokenCanBeDecoded = (req, res, next) => {
+  try {
+    jwt.decode(req.headers.token);
+    next();
+  } catch (e) {
+    next(errors.badRequest(errorMsgs.tokenIsInvalid));
+  }
+};

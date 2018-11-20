@@ -2,7 +2,8 @@ const User = require('../models').User,
   logger = require('../logger'),
   jwt = require('../services/jwt'),
   errors = require('../errors'),
-  bcryptService = require('../services/bcrypt');
+  bcryptService = require('../services/bcrypt'),
+  secret = require('../../config/index').common.session.secret;
 
 const errorMsgs = {
   nonExistingUser: 'User does not exist',
@@ -10,6 +11,30 @@ const errorMsgs = {
   emailIsAlreadyRegistered: 'email is already registered',
   insufficientPermissions: 'User is not authorized'
 };
+exports.badRequestErrorMessages = errorMsgs;
+
+exports.logIn = ({ user }, res, next) =>
+  User.find({ where: { email: user.email } })
+    .then(dbUser => {
+      if (!dbUser) {
+        throw errors.badRequest(errorMsgs.nonExistingUser);
+      } else {
+        return bcryptService.isPasswordValid(user.password, dbUser).then(validPassword => {
+          if (!validPassword) {
+            throw errors.badRequest(errorMsgs.invalidPassword);
+          } else {
+            const payload = { email: user.email };
+            const token = jwt.encode(payload, secret);
+            res
+              .status(200)
+              .json({ token })
+              .end();
+          }
+        });
+      }
+    })
+    .catch(next);
+
 exports.badRequestErrorMessages = errorMsgs;
 
 exports.logIn = ({ user }, res, next) =>
@@ -101,3 +126,25 @@ exports.createAdmin = (req, res, next) =>
       });
     })
     .catch(next);
+
+exports.listUsers = (req, res, next) => {
+  req.query.page = Number.parseInt(req.query.page);
+  if (!Number.isSafeInteger(req.query.page)) req.query.page = 0;
+
+  req.query.limit = Number.parseInt(req.query.limit);
+  if (!Number.isSafeInteger(req.query.limit)) req.query.limit = process.env.DEFAULT_ITEMS_PER_PAGE;
+  return User.findAll({ limit: req.query.limit, offset: req.query.page * req.query.limit })
+    .then(dbUsers => {
+      const toSendUsers = dbUsers.map(u => ({
+        firstName: u.firstName,
+        lastName: u.lastName,
+        email: u.email
+      }));
+
+      return res
+        .status(200)
+        .send({ users: toSendUsers })
+        .end();
+    })
+    .catch(e => next(errors.databaseError('Database failed')));
+};
