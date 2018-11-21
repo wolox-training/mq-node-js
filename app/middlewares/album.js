@@ -1,12 +1,6 @@
-const { body, header, validationResult, param, query } = require('express-validator/check'),
-  errors = require('../errors');
-
-const errorMsgs = {
-  albumIdMustBeNumber: 'the album id must be a number'
-};
-
-exports.validationErrorMessages = errorMsgs;
+const errorMessages = require('../errors').errorMessages,
+  { param } = require('express-validator/check');
 
 exports.validateAlbumId = param('id')
   .isNumeric()
-  .withMessage(errorMsgs.albumIdMustBeNumber);
+  .withMessage(errorMessages.albumIdMustBeNumber);
