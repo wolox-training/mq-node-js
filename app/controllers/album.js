@@ -1,24 +1,32 @@
 const jwt = require('../services/jwt'),
   getUserForToken = require('./user').getUserForToken,
   request = require('request-promise-native'),
-  albumsUri = 'https://jsonplaceholder.typicode.com/albums',
   errors = require('../errors'),
   PurchasedAlbum = require('../models').PurchasedAlbum;
 
-let albums;
+exports.albumsHost = 'https://jsonplaceholder.typicode.com';
+exports.albumsPath = '/albums';
 
-const getAlbums = () => {
-  if (albums) return Promise.resolve(albums);
-  // lazy initialization
-  return request({ uri: albumsUri, json: true })
-    .then(res => {
-      albums = res;
-      return albums;
-    })
-    .catch(e => {
-      throw errors.resourceNotFound('albums not available');
-    });
+const errorMsgs = {
+  albumsNotAvailable: 'albums not available',
+  inexistentAlbum: 'inexistent album',
+  albumNotAvailable: 'album not available',
+  albumAlreadyPurchased: 'The album was already purchased'
 };
+
+exports.errorMessages = errorMsgs;
+
+const getAlbums = () =>
+  request({ uri: exports.albumsHost + exports.albumsPath, json: true }).catch(e => {
+    throw errors.resourceNotFound(errorMsgs.albumsNotAvailable);
+  });
+
+const getAlbum = albumId =>
+  request({ uri: `${exports.albumsHost + exports.albumsPath}?id=${albumId}`, json: true })
+    .catch(e => {
+      throw errors.resourceNotFound(errorMsgs.albumNotAvailable);
+    })
+    .then(res => res[0]);
 
 exports.listAlbums = (req, res, next) =>
   getUserForToken(req.headers.token)
@@ -26,19 +34,23 @@ exports.listAlbums = (req, res, next) =>
     .catch(next);
 
 exports.purchaseAlbum = (req, res, next) =>
-  getUserForToken(req.headers.token).then(user => {
-    const albumId = Number.parseInt(req.params.id);
-    PurchasedAlbum.find({ where: { albumId, userId: user.id } })
-      .then(existingAlbum => {
-        if (existingAlbum) throw errors.badRequest('The album was already purchased');
-        else {
-          return PurchasedAlbum.createModel({ albumId, userId: user.id }).then(indbPurchasedAlbum => {
-            res
-              .status(201)
-              .send(indbPurchasedAlbum)
-              .end();
-          });
-        }
+  getUserForToken(req.headers.token)
+    .then(user =>
+      getAlbum(req.params.id).then(album => {
+        if (!album) throw errors.badRequest(errorMsgs.inexistentAlbum);
+        return PurchasedAlbum.find({ where: { albumId: album.id, userId: user.id } }).then(existingAlbum => {
+          if (existingAlbum) throw errors.badRequest(errorMsgs.albumAlreadyPurchased);
+          else {
+            return PurchasedAlbum.createModel({ albumId: album.id, userId: user.id }).then(
+              indbPurchasedAlbum => {
+                res
+                  .status(201)
+                  .send(indbPurchasedAlbum)
+                  .end();
+              }
+            );
+          }
+        });
       })
-      .catch(next);
-  });
+    )
+    .catch(next);

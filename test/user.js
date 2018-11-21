@@ -9,66 +9,15 @@ const chai = require('chai'),
   badRequestErrorMessages = require('./../app/controllers/user').badRequestErrorMessages,
   validationErrorMsgs = require('./../app/middlewares/user').validationErrorMessages,
   jwt = require('../app/services/jwt'),
-  itemsPerPage = Number.parseInt(process.env.DEFAULT_ITEMS_PER_PAGE);
+  itemsPerPage = Number.parseInt(process.env.DEFAULT_ITEMS_PER_PAGE),
+  testHelpers = require('./testHelpers');
 
 chai.use(chaiSubset);
 
-const testPassword = 'somepassword1',
-  testEmail = 'someemail@wolox.com.ar',
-  alreadyUsedEmails = [];
-const getNotUsedEmail = () => {
-  // simply appends 's's to the start of testEmail until the email isnt found;
-  let email = testEmail;
-  while (alreadyUsedEmails.some(e => e === email)) email = `s${email}`;
-  alreadyUsedEmails.push(email);
-  return email;
-};
-
-const signUpTestUser = () =>
-  chai
-    .request(server)
-    .post('/users')
-    .set('content-type', 'application/json')
-    .send({ firstName: 'name', lastName: 'surname', email: getNotUsedEmail(), password: testPassword });
-
-const signUpTestUserAndReturnEmail = () => signUpTestUser().then(res => res.body.email);
-
-const signUpMultipleUsers = amount => {
-  const emailPromises = [...Array(amount).keys()].map(number => signUpTestUserAndReturnEmail());
-  return Promise.all(emailPromises);
-};
-beforeEach('reset already used emails', done => {
-  alreadyUsedEmails.splice(0, alreadyUsedEmails.length);
-  done();
-});
-
-const logInAndReturnToken = email =>
-  chai
-    .request(server)
-    .post('/users/sessions')
-    .set('content-type', 'application/json')
-    .send({ email, password: testPassword })
-    .then(res => res.text);
-
-const getUsersEmailsInPage = (token, page) =>
-  chai
-    .request(server)
-    .get(`/users?page=${page}`)
-    .set('token', token)
-    .send()
-    .then(userListResponse => userListResponse.body.users.map(u => u.email));
-const getUsersEmailsInPageWithLimit = (token, page, limit) =>
-  chai
-    .request(server)
-    .get(`/users?page=${page}$limit=${limit}`)
-    .set('token', token)
-    .send()
-    .then(userListResponse => userListResponse.body.users.map(u => u.email));
-
 describe('/users GET', () => {
   it('should successfully return the registered user', done => {
-    signUpTestUserAndReturnEmail().then(signedUpEmail =>
-      logInAndReturnToken(signedUpEmail).then(token =>
+    testHelpers.signUpTestUserAndReturnEmail().then(signedUpEmail =>
+      testHelpers.logInAndReturnToken(signedUpEmail).then(token =>
         chai
           .request(server)
           .get('/users')
@@ -84,8 +33,8 @@ describe('/users GET', () => {
   });
 
   it('should successfully return the two registered users', done => {
-    signUpMultipleUsers(2).then(emails =>
-      logInAndReturnToken(emails[0]).then(token =>
+    testHelpers.signUpMultipleUsers(2).then(emails =>
+      testHelpers.logInAndReturnToken(emails[0]).then(token =>
         chai
           .request(server)
           .get('/users')
@@ -102,8 +51,8 @@ describe('/users GET', () => {
   });
 
   it('should only return the the amount of users per page', done => {
-    signUpMultipleUsers(itemsPerPage + 1).then(emails =>
-      logInAndReturnToken(emails[0]).then(token =>
+    testHelpers.signUpMultipleUsers(itemsPerPage + 1).then(emails =>
+      testHelpers.logInAndReturnToken(emails[0]).then(token =>
         chai
           .request(server)
           .get('/users')
@@ -111,7 +60,7 @@ describe('/users GET', () => {
           .send()
           .then(userListResponse => {
             const emailListResponse = userListResponse.body.users.map(u => u.email);
-            expect(alreadyUsedEmails).to.containSubset(emailListResponse);
+            expect(testHelpers.alreadyUsedEmails).to.containSubset(emailListResponse);
             expect(emailListResponse.length).to.equal(itemsPerPage);
             done();
           })
@@ -120,9 +69,12 @@ describe('/users GET', () => {
   });
 
   it('should return diferent emails in diferent pages', done => {
-    signUpMultipleUsers(itemsPerPage * 2).then(emails =>
-      logInAndReturnToken(emails[0]).then(token =>
-        Promise.all([getUsersEmailsInPage(token, 0), getUsersEmailsInPage(token, 1)]).then(pages => {
+    testHelpers.signUpMultipleUsers(itemsPerPage * 2).then(emails =>
+      testHelpers.logInAndReturnToken(emails[0]).then(token =>
+        Promise.all([
+          testHelpers.getUsersEmailsInPage(token, 0),
+          testHelpers.getUsersEmailsInPage(token, 1)
+        ]).then(pages => {
           const firstPageEmails = pages[0];
           const secondPageEmails = pages[1];
 
@@ -139,8 +91,8 @@ describe('/users GET', () => {
   });
 
   it('when registering itemsPerPage + 1 users, page 1 should contain 1 element', done => {
-    signUpMultipleUsers(itemsPerPage + 1).then(emails =>
-      logInAndReturnToken(emails[0]).then(token =>
+    testHelpers.signUpMultipleUsers(itemsPerPage + 1).then(emails =>
+      testHelpers.logInAndReturnToken(emails[0]).then(token =>
         chai
           .request(server)
           .get(`/users?page=1`)
@@ -148,7 +100,7 @@ describe('/users GET', () => {
           .send()
           .then(userListResponse => {
             const emailListResponse = userListResponse.body.users.map(u => u.email);
-            expect(alreadyUsedEmails).to.containSubset(emailListResponse);
+            expect(testHelpers.alreadyUsedEmails).to.containSubset(emailListResponse);
             expect(emailListResponse.length).to.equal(1);
             done();
           })
@@ -158,8 +110,8 @@ describe('/users GET', () => {
 
   it('should return limit users per page when specifying it', done => {
     const limit = 5;
-    signUpMultipleUsers(limit).then(emails =>
-      logInAndReturnToken(emails[0]).then(token =>
+    testHelpers.signUpMultipleUsers(limit).then(emails =>
+      testHelpers.logInAndReturnToken(emails[0]).then(token =>
         chai
           .request(server)
           .get(`/users?limit=${limit}`)
@@ -174,8 +126,9 @@ describe('/users GET', () => {
   });
 
   it('should fail because the token is missing', done => {
-    signUpTestUserAndReturnEmail()
-      .then(email => logInAndReturnToken(email))
+    testHelpers
+      .signUpTestUserAndReturnEmail()
+      .then(email => testHelpers.logInAndReturnToken(email))
       .then(token =>
         chai
           .request(server)
@@ -210,8 +163,8 @@ describe('/users GET', () => {
   });
 
   it('should return page 0 because page is empty', done => {
-    signUpTestUserAndReturnEmail().then(email =>
-      logInAndReturnToken(email).then(token =>
+    testHelpers.signUpTestUserAndReturnEmail().then(email =>
+      testHelpers.logInAndReturnToken(email).then(token =>
         chai
           .request(server)
           .get('/users')
@@ -227,8 +180,8 @@ describe('/users GET', () => {
   });
 
   it('should return page 0 because page is not a number', done => {
-    signUpTestUserAndReturnEmail().then(email =>
-      logInAndReturnToken(email).then(token =>
+    testHelpers.signUpTestUserAndReturnEmail().then(email =>
+      testHelpers.logInAndReturnToken(email).then(token =>
         chai
           .request(server)
           .get('/users')
@@ -246,7 +199,7 @@ describe('/users GET', () => {
 
 describe('/users POST', () => {
   it('should successfully create a user', done => {
-    signUpTestUser().then(res => {
+    testHelpers.signUpTestUser().then(res => {
       res.should.have.status(201);
       User.count({ where: { email: res.body.email } }).then(count => {
         should.equal(count, 1);
@@ -261,7 +214,12 @@ describe('/users POST', () => {
       .request(server)
       .post('/users')
       .set('content-type', 'application/json')
-      .send({ firstName: 'name', lastName: 'surname', email: 'not an email', password: testPassword })
+      .send({
+        firstName: 'name',
+        lastName: 'surname',
+        email: 'not an email',
+        password: testHelpers.testPassword
+      })
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
@@ -280,7 +238,12 @@ describe('/users POST', () => {
       .request(server)
       .post('/users')
       .set('content-type', 'application/json')
-      .send({ firstName: 'name', lastName: 'surname', email: 'someemail@gmail.com', password: testPassword })
+      .send({
+        firstName: 'name',
+        lastName: 'surname',
+        email: 'someemail@gmail.com',
+        password: testHelpers.testPassword
+      })
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
@@ -298,7 +261,7 @@ describe('/users POST', () => {
       .request(server)
       .post('/users')
       .set('content-type', 'application/json')
-      .send({ firstName: 'name', lastName: 'surname', email: getNotUsedEmail() })
+      .send({ firstName: 'name', lastName: 'surname', email: testHelpers.getNotUsedEmail() })
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
@@ -318,7 +281,12 @@ describe('/users POST', () => {
       .request(server)
       .post('/users')
       .set('content-type', 'application/json')
-      .send({ firstName: 'name', lastName: 'surname', email: getNotUsedEmail(), password: 'somepassword' })
+      .send({
+        firstName: 'name',
+        lastName: 'surname',
+        email: testHelpers.getNotUsedEmail(),
+        password: 'somepassword'
+      })
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
@@ -336,7 +304,12 @@ describe('/users POST', () => {
       .request(server)
       .post('/users')
       .set('content-type', 'application/json')
-      .send({ firstName: 'name', lastName: 'surname', email: getNotUsedEmail(), password: 'pass1' })
+      .send({
+        firstName: 'name',
+        lastName: 'surname',
+        email: testHelpers.getNotUsedEmail(),
+        password: 'pass1'
+      })
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
@@ -354,7 +327,7 @@ describe('/users POST', () => {
       .request(server)
       .post('/users')
       .set('content-type', 'application/json')
-      .send({ firstName: 'name', email: getNotUsedEmail(), password: testPassword })
+      .send({ firstName: 'name', email: testHelpers.getNotUsedEmail(), password: testHelpers.testPassword })
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
@@ -374,7 +347,11 @@ describe('/users POST', () => {
       .request(server)
       .post('/users')
       .set('content-type', 'application/json')
-      .send({ lastName: 'lastname', email: getNotUsedEmail(), password: testPassword })
+      .send({
+        lastName: 'lastname',
+        email: testHelpers.getNotUsedEmail(),
+        password: testHelpers.testPassword
+      })
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
@@ -393,12 +370,12 @@ describe('/users POST', () => {
 
 describe('/users/sessions POST', () => {
   it('should successfully log in a user', done => {
-    signUpTestUserAndReturnEmail().then(signedUpEmail => {
+    testHelpers.signUpTestUserAndReturnEmail().then(signedUpEmail => {
       chai
         .request(server)
         .post('/users/sessions')
         .set('content-type', 'application/json')
-        .send({ email: signedUpEmail, password: testPassword })
+        .send({ email: signedUpEmail, password: testHelpers.testPassword })
         .then(res => {
           res.should.have.status(200);
           should.exist(res.text);
@@ -416,7 +393,7 @@ describe('/users/sessions POST', () => {
       .request(server)
       .post('/users/sessions')
       .set('content-type', 'application/json')
-      .send({ email: 'nonRegisteredEmail@wolox.com.ar', password: testPassword })
+      .send({ email: 'nonRegisteredEmail@wolox.com.ar', password: testHelpers.testPassword })
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
@@ -426,12 +403,12 @@ describe('/users/sessions POST', () => {
   });
 
   it('should not login a user because the password is invalid', done => {
-    signUpTestUserAndReturnEmail().then(signedUpEmail => {
+    testHelpers.signUpTestUserAndReturnEmail().then(signedUpEmail => {
       chai
         .request(server)
         .post('/users/sessions')
         .set('content-type', 'application/json')
-        .send({ email: signedUpEmail, password: `${testPassword}2` })
+        .send({ email: signedUpEmail, password: `${testHelpers.testPassword}2` })
         .catch(e => {
           should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
           should.equal(e.status, 400);
@@ -446,7 +423,7 @@ describe('/users/sessions POST', () => {
       .request(server)
       .post('/users/sessions')
       .set('content-type', 'application/json')
-      .send({ email: getNotUsedEmail() })
+      .send({ email: testHelpers.getNotUsedEmail() })
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
@@ -467,7 +444,7 @@ describe('/users/sessions POST', () => {
       .request(server)
       .post('/users/sessions')
       .set('content-type', 'application/json')
-      .send({ password: testPassword })
+      .send({ password: testHelpers.testPassword })
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
