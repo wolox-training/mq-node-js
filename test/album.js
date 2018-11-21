@@ -142,7 +142,7 @@ describe('/albums/:id POST', () => {
     );
   });
 
-  it.only('should fail to purchase album because it was purchased already', done => {
+  it('should fail to purchase album because it was purchased already', done => {
     const albumIdToBuy = 1;
 
     const nocks = [...Array(2)].map(() =>
