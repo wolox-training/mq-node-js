@@ -458,7 +458,7 @@ describe('/users/sessions POST', () => {
       });
   });
 
-  it.skip('should fail because the session has expired', done => {
+  it('should fail because the session has expired', done => {
     const timeoutToWait = (config.common.api.userSessionDurationInSeconds + 1) * 1000;
     testHelpers
       .signUpTestUserAsAdmin()
