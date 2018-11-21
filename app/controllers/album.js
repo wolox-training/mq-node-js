@@ -1,7 +1,5 @@
-const getUserForToken = require('./user').getUserForToken,
-  albumsService = require('../services/albums'),
-  errors = require('../errors'),
-  errorMessages = require('../errors').errorMessages;
+const getUserForToken = require('../services/jwt').getUserForToken,
+  albumsService = require('../services/albums');
 
 exports.listAlbums = (req, res, next) =>
   getUserForToken(req.headers.token)

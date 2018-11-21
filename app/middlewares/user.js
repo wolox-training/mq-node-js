@@ -1,5 +1,6 @@
-const { body, header, validationResult, query } = require('express-validator/check'),
+const { body, header, validationResult } = require('express-validator/check'),
   errors = require('../errors'),
+  jwt = require('../services/jwt'),
   errorMessages = require('../errors').errorMessages;
 
 const emailBelongsToWolox = email => {
@@ -57,6 +58,22 @@ exports.validateSignUp = (req, res, next) => {
   const { firstName, lastName, email, password } = req.body;
   req.user = { firstName, lastName, email, password };
   exports.validateErrors(req, res, next);
+};
+
+exports.validateToken = header('token')
+  .exists()
+  .withMessage(errorMessages.tokenIsRequired)
+  .not()
+  .isEmpty()
+  .withMessage(errorMessages.tokenCantBeEmpty);
+
+exports.validateTokenCanBeDecoded = (req, res, next) => {
+  try {
+    jwt.decode(req.headers.token);
+    next();
+  } catch (e) {
+    next(errors.badRequest(errorMessages.invalidToken));
+  }
 };
 
 exports.validateToken = header('token')
