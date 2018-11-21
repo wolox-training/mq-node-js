@@ -166,6 +166,31 @@ describe('/albums/:id POST', () => {
     );
   });
 
+  it('should fail to purchase album because the token was not present', done => {
+    chai
+      .request(server)
+      .post(`/albums/1`)
+      .send()
+      .catch(e => {
+        e.response.should.have.status(400);
+        expect(e.response.body.message[0]).to.equal(errorMessages.tokenIsRequired);
+        done();
+      });
+  });
+
+  it('should fail to purchase album because the token is invalid', done => {
+    chai
+      .request(server)
+      .post(`/albums/1`)
+      .set('token', 'someinvalidtoken')
+      .send()
+      .catch(e => {
+        e.response.should.have.status(400);
+        expect(e.response.body.message).to.equal(errorMessages.invalidToken);
+        done();
+      });
+  });
+
   it('should fail to purchase album because id is not a number', done => {
     testHelpers.signUpTestUserAndReturnEmail().then(signedUpEmail =>
       testHelpers.logInAndReturnToken(signedUpEmail).then(token =>
