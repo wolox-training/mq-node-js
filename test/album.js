@@ -225,3 +225,98 @@ describe('/albums/:id POST', () => {
     );
   });
 });
+
+describe('/users/:userId/albums GET', () => {
+  it('should list purchasedAlbums', done => {
+    const albumIdToBuy = 1;
+    const n = nock(process.env.ALBUMS_HOST)
+      .get(process.env.ALBUMS_PATH)
+      .query({ id: albumIdToBuy })
+      .reply(200, [albums.find(a => a.id === albumIdToBuy)], { 'Content-Type': 'application/json' });
+
+    testHelpers.signUpTestUser().then(res => {
+      const { email, id } = res.body;
+      testHelpers.logInAndReturnToken(email).then(token =>
+        testHelpers.purchaseAlbum(albumIdToBuy, token).then(() =>
+          chai
+            .request(server)
+            .get(`/users/${id}/albums`)
+            .set('token', token)
+            .send()
+            .then(r => {
+              r.should.have.status(200);
+              expect(r.body.length).to.equal(1);
+              expect(r.body[0].albumId).to.equal(albumIdToBuy);
+              done();
+            })
+        )
+      );
+    });
+  });
+
+  it('should list the two albums that were purchased', done => {
+    const albumIdsToBuy = [1, 2];
+
+    const nocks = albumIdsToBuy.map(albumId =>
+      nock(process.env.ALBUMS_HOST)
+        .get(process.env.ALBUMS_PATH)
+        .query({ id: albumId })
+        .reply(200, [albums.find(a => a.id === albumId)], { 'Content-Type': 'application/json' })
+    );
+
+    testHelpers.signUpTestUser().then(res => {
+      const { email, id } = res.body;
+      testHelpers.logInAndReturnToken(email).then(token =>
+        Promise.all(albumIdsToBuy.map(albumId => testHelpers.purchaseAlbum(albumId, token))).then(() =>
+          chai
+            .request(server)
+            .get(`/users/${id}/albums`)
+            .set('token', token)
+            .send()
+            .then(r => {
+              r.should.have.status(200);
+              expect(r.body.length).to.equal(albumIdsToBuy.length);
+              expect(r.body.map(i => i.albumId)).to.containSubset(albumIdsToBuy);
+              nocks.forEach(n => n.done());
+              done();
+            })
+        )
+      );
+    });
+  });
+
+  it('should fail because the token is required', done => {
+    testHelpers.signUpTestUser().then(res => {
+      const { email, id } = res.body;
+      testHelpers.logInAndReturnToken(email).then(token =>
+        chai
+          .request(server)
+          .get(`/users/${id}/albums`)
+          .send()
+          .catch(e => {
+            e.response.should.have.status(400);
+            expect(e.response.body.message[0]).to.equal(errorMessages.tokenIsRequired);
+            done();
+          })
+      );
+    });
+  });
+
+  it('should list no purchasedAlbums because no album has been purchased', done => {
+    testHelpers.signUpTestUser().then(res => {
+      const { email, id } = res.body;
+      testHelpers.logInAndReturnToken(email).then(token =>
+        chai
+          .request(server)
+          .get(`/users/${id}/albums`)
+          .set('token', token)
+          .send()
+          .then(r => {
+            r.should.have.status(200);
+            expect(r.body.length).to.equal(0);
+            done();
+          })
+      );
+    });
+  });
+});

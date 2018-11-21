@@ -38,5 +38,6 @@ exports.errorMessages = {
   bcryptHashFailed: 'Bcrypt password hash failed',
   bcryptCompareFailed: 'Bcrypt password hash compare failed',
   albumIdMustBeNumber: 'The album id must be a number',
-  albumAlreadyPurchased: 'The album was already purchased'
+  albumAlreadyPurchased: 'The album was already purchased',
+  nonAdminUsersCanOnlySeeTheirPurchasedAlbums: 'Non admin users can only access their own purchased albums'
 };
