@@ -75,7 +75,7 @@ beforeEach('Restore nock scopes', done => {
 });
 
 describe('/albums GET', () => {
-  it('should successfully return the registered user', done => {
+  it('should successfully return the albums', done => {
     nock(process.env.ALBUMS_HOST)
       .get(process.env.ALBUMS_PATH)
       .reply(200, albums, { 'Content-Type': 'application/json' });
@@ -101,4 +101,26 @@ describe('/albums GET', () => {
       )
     );
   });
+  /*
+  it.only('should fail because nock is configured to do so', done => {
+    nock(process.env.ALBUMS_HOST)
+      .get(process.env.ALBUMS_PATH)
+      .replyWithError(404, 'Not found', { 'Content-Type': 'application/json' });
+    testHelpers.signUpTestUserAndReturnEmail().then(signedUpEmail =>
+      testHelpers.logInAndReturnToken(signedUpEmail).then(token =>
+        chai
+          .request(server)
+          .get('/albums')
+          .set('token', token)
+          .send()
+          .then(res => console.log(`\n\n\n${res.statusCode}\n\n\n`))
+          .catch(e => {
+            should.equal(e.response.body.internal_code, errors.RESOURCE_NOT_FOUND);
+            should.equal(e.status, 404);
+            expect(e.response.body.message).to.equal('hola');
+            done();
+          })
+      )
+    );
+  }); */
 });
