@@ -72,7 +72,6 @@ exports.validateTokenCanBeDecoded = (req, res, next) => {
     jwt.decode(req.headers.token);
     next();
   } catch (e) {
-    console.log(`\n\n\n${'holis'}\n\n\n`);
     next(errors.badRequest(errorMessages.invalidToken));
   }
 };
