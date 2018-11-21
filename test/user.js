@@ -9,7 +9,8 @@ const chai = require('chai'),
   errorMessages = require('./../app/errors').errorMessages,
   jwt = require('../app/services/jwt'),
   itemsPerPage = Number.parseInt(process.env.DEFAULT_ITEMS_PER_PAGE),
-  testHelpers = require('./testHelpers');
+  testHelpers = require('./testHelpers'),
+  config = require('../config');
 
 chai.use(chaiSubset);
 
@@ -458,6 +459,7 @@ describe('/users/sessions POST', () => {
   });
 
   it.skip('should fail because the session has expired', done => {
+    const timeoutToWait = (config.common.api.userSessionDurationInSeconds + 1) * 1000;
     testHelpers
       .signUpTestUserAsAdmin()
       .then(user => testHelpers.logInAndReturnToken(user.email))
@@ -481,9 +483,95 @@ describe('/users/sessions POST', () => {
                 expect(e.response.body.message).to.equal('Token expired');
                 done();
               }),
-
-          3000
+          timeoutToWait
         )
       );
+  });
+});
+
+describe('/admin/users POST', () => {
+  it('should fail because a non admin user cannot create a admin user', done => {
+    testHelpers.signUpTestUserAndReturnEmail().then(signedUpEmail =>
+      testHelpers.logInAndReturnToken(signedUpEmail).then(token =>
+        chai
+          .request(server)
+          .post('/admin/users')
+          .set('content-type', 'application/json')
+          .set('token', token)
+          .send({
+            firstName: 'name',
+            lastName: 'surname',
+            email: testHelpers.getNotUsedEmail(),
+            password: testHelpers.testPassword
+          })
+          .catch(e => {
+            should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
+            should.equal(e.status, 400);
+            expect(e.response.body.message).to.equal(errorMessages.insufficientPermissions);
+            done();
+          })
+      )
+    );
+  });
+
+  it('should create a admin user because the requesting user is admin', done => {
+    testHelpers.signUpTestUserAsAdmin().then(adminUser =>
+      testHelpers.logInAndReturnToken(adminUser.email).then(adminRelatedToken =>
+        chai
+          .request(server)
+          .post('/admin/users')
+          .set('content-type', 'application/json')
+          .set('token', adminRelatedToken)
+          .send({
+            firstName: 'name',
+            lastName: 'surname',
+            email: testHelpers.getNotUsedEmail(),
+            password: testHelpers.testPassword
+          })
+          .then(res => {
+            res.should.have.status(201);
+            return User.find({ where: { email: res.body.email } }).then(newAdminUser => {
+              expect(newAdminUser.isAdmin).to.equal(true);
+              dictum.chai(res);
+              done();
+            });
+          })
+          .catch(e => {
+            console.log(`\n\n\n${adminRelatedToken}\n\n\n`);
+          })
+      )
+    );
+  });
+
+  it('should update the user to be admin because the requesting user is admin', done => {
+    const updatedUserNewFirstName = 'some new first name';
+    const updatedUserNewLastName = 'some new last name';
+    testHelpers.signUpTestUserAsAdmin().then(adminUser =>
+      testHelpers.signUpTestUserAndReturnEmail().then(testUserEmailToUpdateAsAdmin => {
+        testHelpers.logInAndReturnToken(adminUser.email).then(adminRelatedToken =>
+          chai
+            .request(server)
+            .post('/admin/users')
+            .set('content-type', 'application/json')
+            .set('token', adminRelatedToken)
+            .send({
+              firstName: updatedUserNewFirstName,
+              lastName: updatedUserNewLastName,
+              email: testUserEmailToUpdateAsAdmin,
+              password: testHelpers.testPassword
+            })
+            .then(res => {
+              res.should.have.status(200);
+              return User.find({ where: { email: res.body.email } }).then(userUpdatedAsAdmin => {
+                expect(userUpdatedAsAdmin.email).to.equal(testUserEmailToUpdateAsAdmin);
+                expect(userUpdatedAsAdmin.firstName).to.equal(updatedUserNewFirstName);
+                expect(userUpdatedAsAdmin.lastName).to.equal(updatedUserNewLastName);
+                expect(userUpdatedAsAdmin.isAdmin).to.equal(true);
+                done();
+              });
+            })
+        );
+      })
+    );
   });
 });

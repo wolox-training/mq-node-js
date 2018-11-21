@@ -2,7 +2,8 @@ const jwtsimple = require('jwt-simple'),
   secret = require('../../config/index').common.session.secret,
   User = require('../models').User,
   errors = require('../errors'),
-  errorMessages = errors.errorMessages;
+  errorMessages = errors.errorMessages,
+  config = require('../../config');
 
 exports.encode = payload => jwtsimple.encode(payload, secret);
 exports.decode = token => jwtsimple.decode(token, secret);
@@ -21,8 +22,8 @@ exports.getUserForToken = token => {
           throw errors.internalServerError(errorMessages.userNotFound);
         } else {
           const deltaMs = Date.now() - timestamp;
-          const sessionDurationMs = process.env.USER_SESSION_DURATION_IN_SECONDS
-            ? Number.parseInt(process.env.USER_SESSION_DURATION_IN_SECONDS) * 1000
+          const sessionDurationMs = config.common.api.userSessionDurationInSeconds
+            ? Number.parseInt(config.common.api.userSessionDurationInSeconds) * 1000
             : 30 * 60 * 1000; // default value in case env is not set up correctly
           if (deltaMs > sessionDurationMs) throw errors.authenticationError(errorMessages.tokenExpired);
           else return user;

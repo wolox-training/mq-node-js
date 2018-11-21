@@ -45,5 +45,6 @@ exports.errorMessages = {
   youCanOnlyViewPhotosOfYourPurchasedAlbums: 'You can only view photos of your purchased albums',
   albumPhotosNotAvailable: 'albumPhotosNotAvailable',
   userNotFound: 'User not found',
-  tokenExpired: 'Token expired'
+  tokenExpired: 'Token expired',
+  insufficientPermissions: 'You must be admin to perform this action'
 };
