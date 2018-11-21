@@ -103,7 +103,6 @@ describe('/albums GET', () => {
           .get('/albums')
           .set('token', token)
           .send()
-          .then(res => console.log(`\n\n\n${'THEN'}\n\n\n`))
           .catch(e => {
             should.equal(e.response.body.internal_code, errors.RESOURCE_NOT_FOUND);
             should.equal(e.status, 404);
@@ -116,14 +115,20 @@ describe('/albums GET', () => {
   });
 });
 
-/*
 describe('/albums/:id POST', () => {
   it('should successfully purchase album', done => {
+    const albumIndexToBuy = 1;
+
+    const n = nock(process.env.ALBUMS_HOST)
+      .get(process.env.ALBUMS_PATH)
+      .query({ id: albumIndexToBuy })
+      .reply(200, [albums[albumIndexToBuy]], { 'Content-Type': 'application/json' });
+
     testHelpers.signUpTestUserAndReturnEmail().then(signedUpEmail =>
       testHelpers.logInAndReturnToken(signedUpEmail).then(token =>
         chai
           .request(server)
-          .post('/albums/1')
+          .post(`/albums/${albumIndexToBuy}`)
           .set('token', token)
           .send()
           .then(res => {
@@ -133,7 +138,7 @@ describe('/albums/:id POST', () => {
       )
     );
   });
-
+  /*
   it('should fail to purchase album because id is not a number', done => {
     testHelpers.signUpTestUserAndReturnEmail().then(signedUpEmail =>
       testHelpers.logInAndReturnToken(signedUpEmail).then(token =>
@@ -170,5 +175,5 @@ describe('/albums/:id POST', () => {
           })
       )
     );
-  });
-}); */
+  }); */
+});

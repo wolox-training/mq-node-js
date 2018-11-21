@@ -3,30 +3,7 @@ const User = require('../models').User,
   jwt = require('../services/jwt'),
   errors = require('../errors'),
   errorMessages = require('../errors').errorMessages,
-  bcryptService = require('../services/bcrypt'),
-  secret = require('../../config/index').common.session.secret;
-
-exports.logIn = ({ user }, res, next) =>
-  User.find({ where: { email: user.email } })
-    .then(dbUser => {
-      if (!dbUser) {
-        throw errors.badRequest(errorMessages.nonExistingUser);
-      } else {
-        return bcryptService.isPasswordValid(user.password, dbUser).then(validPassword => {
-          if (!validPassword) {
-            throw errors.badRequest(errorMessages.invalidPassword);
-          } else {
-            const payload = { email: user.email };
-            const token = jwt.encode(payload, secret);
-            res
-              .status(200)
-              .json({ token })
-              .end();
-          }
-        });
-      }
-    })
-    .catch(next);
+  bcryptService = require('../services/bcrypt');
 
 exports.logIn = ({ user }, res, next) =>
   User.find({ where: { email: user.email } })

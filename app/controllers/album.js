@@ -1,16 +1,8 @@
 const jwt = require('../services/jwt'),
-  request = require('request-promise-native'),
   errors = require('../errors'),
   PurchasedAlbum = require('../models').PurchasedAlbum,
   albumsService = require('../services/albums'),
   errorMessages = require('../errors').errorMessages;
-
-const getAlbum = albumId =>
-  request({ uri: `${exports.albumsHost + exports.albumsPath}?id=${albumId}`, json: true })
-    .catch(e => {
-      throw errors.resourceNotFound(errorMessages.albumNotAvailable);
-    })
-    .then(res => res[0]);
 
 exports.listAlbums = (req, res, next) =>
   jwt
@@ -22,7 +14,7 @@ exports.purchaseAlbum = (req, res, next) =>
   jwt
     .getUserForToken(req.headers.token)
     .then(user =>
-      getAlbum(req.params.id).then(album => {
+      albumsService.getAlbum(req.params.id).then(album => {
         if (!album) throw errors.badRequest(errorMessages.inexistentAlbum);
         return PurchasedAlbum.find({ where: { albumId: album.id, userId: user.id } }).then(existingAlbum => {
           if (existingAlbum) throw errors.badRequest(errorMessages.albumAlreadyPurchased);
