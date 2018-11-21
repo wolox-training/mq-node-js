@@ -14,9 +14,8 @@ exports.purchaseAlbum = (req, res, next) =>
   jwt
     .getUserForToken(req.headers.token)
     .then(user =>
-      albumsService.getAlbum(req.params.id).then(album => {
-        if (!album) throw errors.badRequest(errorMessages.inexistentAlbum);
-        return PurchasedAlbum.find({ where: { albumId: album.id, userId: user.id } }).then(existingAlbum => {
+      albumsService.getAlbum(req.params.id).then(album =>
+        PurchasedAlbum.find({ where: { albumId: album.id, userId: user.id } }).then(existingAlbum => {
           if (existingAlbum) throw errors.badRequest(errorMessages.albumAlreadyPurchased);
           else {
             return PurchasedAlbum.createModel({ albumId: album.id, userId: user.id }).then(
@@ -28,7 +27,7 @@ exports.purchaseAlbum = (req, res, next) =>
               }
             );
           }
-        });
-      })
+        })
+      )
     )
     .catch(next);
