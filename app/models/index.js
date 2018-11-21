@@ -6,7 +6,17 @@ const fs = require('fs'),
   dbConfig = require('../../config/db')[config.environment],
   db = {};
 
-const sequelize = new Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, dbConfig);
+let sequelize;
+if (process.env.DATABASE_URL) {
+  // use heroku environment vars
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres',
+    protocol: 'postgres'
+  });
+} else {
+  // use local connection
+  sequelize = new Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, dbConfig);
+}
 
 fs
   .readdirSync(__dirname)

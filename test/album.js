@@ -1,19 +1,13 @@
 const chai = require('chai'),
   dictum = require('dictum.js'),
-  server = require('./../app'),
+  server = require('../app'),
   chaiSubset = require('chai-subset'),
   should = chai.should(),
   expect = chai.expect,
-  errors = require('./../app/errors'),
-  User = require('./../app/models').User,
-  badRequestErrorMessages = require('./../app/controllers/user').badRequestErrorMessages,
-  validationErrorMsgs = require('./../app/middlewares/user').validationErrorMessages,
-  albumValidationErrorMsgs = require('./../app/middlewares/album').validationErrorMessages,
-  albumErrorMessages = require('./../app/controllers/album').errorMessages,
-  jwt = require('../app/services/jwt'),
-  itemsPerPage = Number.parseInt(process.env.DEFAULT_ITEMS_PER_PAGE),
+  errors = require('../app/errors'),
   testHelpers = require('./testHelpers'),
-  nock = require('nock');
+  nock = require('nock'),
+  errorMessages = require('../app/errors').errorMessages;
 
 chai.use(chaiSubset);
 
@@ -70,15 +64,9 @@ const albums = [
   }
 ];
 
-beforeEach('Restore nock scopes', done => {
-  nock.restore();
-  nock.cleanAll();
-  done();
-});
-
 describe('/albums GET', () => {
-  it('should successfully return the registered user', done => {
-    nock(process.env.ALBUMS_HOST)
+  it('should successfully return the albums', done => {
+    const n = nock(process.env.ALBUMS_HOST)
       .get(process.env.ALBUMS_PATH)
       .reply(200, albums, { 'Content-Type': 'application/json' });
     testHelpers.signUpTestUserAndReturnEmail().then(signedUpEmail =>
@@ -90,14 +78,37 @@ describe('/albums GET', () => {
           .send()
           .then(res => {
             expect(res.body).to.be.an('array');
-
             res.body.forEach(album => {
               expect(album).to.have.property('userId');
               expect(album).to.have.property('id');
               expect(album).to.have.property('title');
             });
-
             res.should.have.status(200);
+            dictum.chai(res);
+            n.done();
+            done();
+          })
+      )
+    );
+  });
+
+  it('should fail because nock is configured to do so', done => {
+    const n = nock(process.env.ALBUMS_HOST)
+      .get(process.env.ALBUMS_PATH)
+      .replyWithError('Not Found');
+    testHelpers.signUpTestUserAndReturnEmail().then(signedUpEmail =>
+      testHelpers.logInAndReturnToken(signedUpEmail).then(token =>
+        chai
+          .request(server)
+          .get('/albums')
+          .set('token', token)
+          .send()
+          .then(res => console.log(`\n\n\n${'THEN'}\n\n\n`))
+          .catch(e => {
+            should.equal(e.response.body.internal_code, errors.RESOURCE_NOT_FOUND);
+            should.equal(e.status, 404);
+            expect(e.response.body.message).to.equal(errorMessages.albumsNotAvailable);
+            n.done();
             done();
           })
       )
