@@ -8,12 +8,13 @@ const fs = require('fs'),
 
 let sequelize;
 if (process.env.DATABASE_URL) {
+  // use heroku environment vars
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     protocol: 'postgres'
   });
 } else {
-  // the application is executed on the local machine ... use mysql
+  // use local connection
   sequelize = new Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, dbConfig);
 }
 

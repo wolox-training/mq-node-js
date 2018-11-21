@@ -39,7 +39,8 @@ const config = {
     },
     api: {
       bodySizeLimit: process.env.API_BODY_SIZE_LIMIT,
-      parameterLimit: process.env.API_PARAMETER_LIMIT
+      parameterLimit: process.env.API_PARAMETER_LIMIT,
+      userSessionDurationInSeconds: process.env.USER_SESSION_DURATION_IN_SECONDS
     },
     session: {
       header_name: 'authorization',
