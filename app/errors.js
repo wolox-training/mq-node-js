@@ -15,3 +15,25 @@ exports.badRequest = message => internalError(message, exports.BAD_REQUEST);
 exports.bcryptError = message => internalError(message, exports.BCRYPT_ERROR);
 exports.internalServerError = message => internalError(message, exports.INTERNAL_SERVER_ERROR);
 exports.resourceNotFound = message => internalError(message, exports.RESOURCE_NOT_FOUND);
+
+exports.errorMessages = {
+  nonExistingUser: 'User does not exist',
+  invalidPassword: 'Invalid password',
+  invalidToken: 'Invalid Token',
+  emailIsAlreadyRegistered: 'email is already registered',
+  tokenReferencesNonExistentUser: 'Token is referencing non-existing user',
+  databaseFailed: 'Database failed',
+  albumsNotAvailable: 'Albums not available',
+  emailIsRequired: 'The email is required',
+  emailMustBelongToWolox: 'Email must belong to wolox',
+  textFieldIsRequired: field => `The ${field} field is required`,
+  textFieldMustBeString: field => `The ${field} field must be string`,
+  textFieldCantBeEmpty: field => `The ${field} cant be empty`,
+  passwordMustBeAtLeast8CharsLong: 'Password must be at least 8 characters long',
+  passwordMustBeAlphanumeric: 'Password must be alphanumeric',
+  passwordIsRequired: 'The password is required',
+  tokenIsRequired: 'Token is required',
+  tokenCantBeEmpty: 'Token cant be empty',
+  bcryptHashFailed: 'Bcrypt password hash failed',
+  bcryptCompareFailed: 'Bcrypt password hash compare failed'
+};

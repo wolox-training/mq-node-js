@@ -3,25 +3,18 @@ const User = require('../models').User,
   jwt = require('../services/jwt'),
   errors = require('../errors'),
   bcryptService = require('../services/bcrypt'),
-  secret = require('../../config/index').common.session.secret;
-
-const errorMsgs = {
-  nonExistingUser: 'User does not exist',
-  invalidPassword: 'Invalid password',
-  invalidToken: 'Invalid Token',
-  emailIsAlreadyRegistered: 'email is already registered'
-};
-exports.badRequestErrorMessages = errorMsgs;
+  secret = require('../../config/index').common.session.secret,
+  errorMessages = require('../errors').errorMessages;
 
 exports.logIn = ({ user }, res, next) => {
   User.find({ where: { email: user.email } })
     .then(dbUser => {
       if (!dbUser) {
-        throw errors.badRequest(errorMsgs.nonExistingUser);
+        throw errors.badRequest(errorMessages.nonExistingUser);
       } else {
         return bcryptService.isPasswordValid(user.password, dbUser).then(validPassword => {
           if (!validPassword) {
-            throw errors.badRequest(errorMsgs.invalidPassword);
+            throw errors.badRequest(errorMessages.invalidPassword);
           } else {
             const payload = { email: user.email };
             const token = jwt.encode(payload, secret);
@@ -36,17 +29,15 @@ exports.logIn = ({ user }, res, next) => {
     .catch(next);
 };
 
-exports.badRequestErrorMessages = errorMsgs;
-
 exports.logIn = ({ user }, res, next) =>
   User.find({ where: { email: user.email } })
     .then(dbUser => {
       if (!dbUser) {
-        throw errors.badRequest(errorMsgs.nonExistingUser);
+        throw errors.badRequest(errorMessages.nonExistingUser);
       } else {
         return bcryptService.isPasswordValid(user.password, dbUser).then(validPassword => {
           if (!validPassword) {
-            throw errors.badRequest(errorMsgs.invalidPassword);
+            throw errors.badRequest(errorMessages.invalidPassword);
           } else {
             const payload = { email: user.email };
             const token = jwt.encode(payload);
@@ -68,7 +59,7 @@ const emailIsRegistered = email =>
 exports.signUp = ({ user }, res, next) =>
   emailIsRegistered(user.email)
     .then(isRegistered => {
-      if (isRegistered) throw errors.badRequest(errorMsgs.emailIsAlreadyRegistered);
+      if (isRegistered) throw errors.badRequest(errorMessages.emailIsAlreadyRegistered);
       else
         return bcryptService.hashPassword(user.password).then(hashedPassword =>
           User.createModel({ ...user, password: hashedPassword }).then(newUser => {
@@ -86,7 +77,7 @@ exports.listUsers = (req, res, next) => {
   try {
     jwt.decode(req.headers.token);
   } catch (e) {
-    next(errors.badRequest(errorMsgs.invalidToken));
+    next(errors.badRequest(errorMessages.invalidToken));
     return;
   }
 
@@ -106,17 +97,17 @@ exports.listUsers = (req, res, next) => {
         .send({ users: toSendUsers })
         .end();
     })
-    .catch(e => next(errors.databaseError('Database failed')));
+    .catch(e => next(errors.databaseError(errorMessages.databaseFailed)));
 };
 
 exports.getUserForToken = token => {
   try {
     const payload = jwt.decode(token);
     return User.find({ where: { email: payload.email } }).then(user => {
-      if (!user) throw errors.internalServerError('Token is referencing non-existing user');
+      if (!user) throw errors.internalServerError(errorMessages.tokenReferencesNonExistentUser);
       return user;
     });
   } catch (e) {
-    throw errors.badRequest(errorMsgs.invalidToken);
+    throw errors.badRequest(errorMessages.invalidToken);
   }
 };

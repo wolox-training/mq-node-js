@@ -6,8 +6,7 @@ const chai = require('chai'),
   expect = chai.expect,
   errors = require('./../app/errors'),
   User = require('./../app/models').User,
-  badRequestErrorMessages = require('./../app/controllers/user').badRequestErrorMessages,
-  validationErrorMsgs = require('./../app/middlewares/user').validationErrorMessages,
+  errorMessages = require('./../app/errors').errorMessages,
   jwt = require('../app/services/jwt'),
   itemsPerPage = Number.parseInt(process.env.DEFAULT_ITEMS_PER_PAGE),
   testHelpers = require('./testHelpers');
@@ -141,8 +140,8 @@ describe('/users GET', () => {
               2,
               'We should expect two messages indicating the token is required and cant be empty'
             );
-            expect(e.response.body.message).to.include(validationErrorMsgs.tokenIsRequired);
-            expect(e.response.body.message).to.include(validationErrorMsgs.tokenCantBeEmpty);
+            expect(e.response.body.message).to.include(errorMessages.tokenIsRequired);
+            expect(e.response.body.message).to.include(errorMessages.tokenCantBeEmpty);
             done();
           })
       );
@@ -157,7 +156,7 @@ describe('/users GET', () => {
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
-        expect(e.response.body.message).to.equal(badRequestErrorMessages.invalidToken);
+        expect(e.response.body.message).to.equal(errorMessages.invalidToken);
         done();
       });
   });
@@ -227,8 +226,8 @@ describe('/users POST', () => {
           2,
           'We should expect two messages, one indicating message is required and another one indicating that the email must belong to Wolox'
         );
-        expect(e.response.body.message).to.include(validationErrorMsgs.emailMustBelongToWolox);
-        expect(e.response.body.message).to.include(validationErrorMsgs.emailIsRequired);
+        expect(e.response.body.message).to.include(errorMessages.emailMustBelongToWolox);
+        expect(e.response.body.message).to.include(errorMessages.emailIsRequired);
         done();
       });
   });
@@ -251,7 +250,7 @@ describe('/users POST', () => {
           1,
           'We should expect only one message indicating that the email must belong to wolox'
         );
-        expect(e.response.body.message).to.include(validationErrorMsgs.emailMustBelongToWolox);
+        expect(e.response.body.message).to.include(errorMessages.emailMustBelongToWolox);
         done();
       });
   });
@@ -269,9 +268,9 @@ describe('/users POST', () => {
           3,
           'We should expect three messages, password is required, at least 8 chars and alphanumeric'
         );
-        expect(e.response.body.message).to.include(validationErrorMsgs.passwordIsRequired);
-        expect(e.response.body.message).to.include(validationErrorMsgs.passwordMustBeAtLeast8CharsLong);
-        expect(e.response.body.message).to.include(validationErrorMsgs.passwordMustBeAlphanumeric);
+        expect(e.response.body.message).to.include(errorMessages.passwordIsRequired);
+        expect(e.response.body.message).to.include(errorMessages.passwordMustBeAtLeast8CharsLong);
+        expect(e.response.body.message).to.include(errorMessages.passwordMustBeAlphanumeric);
         done();
       });
   });
@@ -294,7 +293,7 @@ describe('/users POST', () => {
           1,
           'We should expect one messages indicating the password must be alphanumeric'
         );
-        expect(e.response.body.message).to.include(validationErrorMsgs.passwordMustBeAlphanumeric);
+        expect(e.response.body.message).to.include(errorMessages.passwordMustBeAlphanumeric);
         done();
       });
   });
@@ -317,7 +316,7 @@ describe('/users POST', () => {
           1,
           'We should expect one messages indicating the password must be at least 8 characters long'
         );
-        expect(e.response.body.message).to.include(validationErrorMsgs.passwordMustBeAtLeast8CharsLong);
+        expect(e.response.body.message).to.include(errorMessages.passwordMustBeAtLeast8CharsLong);
         done();
       });
   });
@@ -335,9 +334,9 @@ describe('/users POST', () => {
           3,
           'We should expect three messages, lastName is required, string and not empty'
         );
-        expect(e.response.body.message).to.include(validationErrorMsgs.textFieldCantBeEmpty('lastName'));
-        expect(e.response.body.message).to.include(validationErrorMsgs.textFieldMustBeString('lastName'));
-        expect(e.response.body.message).to.include(validationErrorMsgs.textFieldIsRequired('lastName'));
+        expect(e.response.body.message).to.include(errorMessages.textFieldCantBeEmpty('lastName'));
+        expect(e.response.body.message).to.include(errorMessages.textFieldMustBeString('lastName'));
+        expect(e.response.body.message).to.include(errorMessages.textFieldIsRequired('lastName'));
         done();
       });
   });
@@ -360,9 +359,9 @@ describe('/users POST', () => {
           3,
           'We should expect three messages, firstName is required, string and not empty'
         );
-        expect(e.response.body.message).to.include(validationErrorMsgs.textFieldCantBeEmpty('firstName'));
-        expect(e.response.body.message).to.include(validationErrorMsgs.textFieldMustBeString('firstName'));
-        expect(e.response.body.message).to.include(validationErrorMsgs.textFieldIsRequired('firstName'));
+        expect(e.response.body.message).to.include(errorMessages.textFieldCantBeEmpty('firstName'));
+        expect(e.response.body.message).to.include(errorMessages.textFieldMustBeString('firstName'));
+        expect(e.response.body.message).to.include(errorMessages.textFieldIsRequired('firstName'));
         done();
       });
   });
@@ -397,7 +396,7 @@ describe('/users/sessions POST', () => {
       .catch(e => {
         should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
         should.equal(e.status, 400);
-        should.equal(e.response.body.message, badRequestErrorMessages.nonExistingUser);
+        should.equal(e.response.body.message, errorMessages.nonExistingUser);
         done();
       });
   });
@@ -412,7 +411,7 @@ describe('/users/sessions POST', () => {
         .catch(e => {
           should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
           should.equal(e.status, 400);
-          should.equal(e.response.body.message, badRequestErrorMessages.invalidPassword);
+          should.equal(e.response.body.message, errorMessages.invalidPassword);
           done();
         });
     });
@@ -432,9 +431,9 @@ describe('/users/sessions POST', () => {
           3,
           'We should expect three messages, password is required, at least 8 chars and alphanumeric'
         );
-        expect(e.response.body.message).to.include(validationErrorMsgs.passwordIsRequired);
-        expect(e.response.body.message).to.include(validationErrorMsgs.passwordMustBeAtLeast8CharsLong);
-        expect(e.response.body.message).to.include(validationErrorMsgs.passwordMustBeAlphanumeric);
+        expect(e.response.body.message).to.include(errorMessages.passwordIsRequired);
+        expect(e.response.body.message).to.include(errorMessages.passwordMustBeAtLeast8CharsLong);
+        expect(e.response.body.message).to.include(errorMessages.passwordMustBeAlphanumeric);
         done();
       });
   });
@@ -452,8 +451,8 @@ describe('/users/sessions POST', () => {
           2,
           'We should expect 2 messages, email is required and must belong to wolox'
         );
-        expect(e.response.body.message).to.include(validationErrorMsgs.emailIsRequired);
-        expect(e.response.body.message).to.include(validationErrorMsgs.emailMustBelongToWolox);
+        expect(e.response.body.message).to.include(errorMessages.emailIsRequired);
+        expect(e.response.body.message).to.include(errorMessages.emailMustBelongToWolox);
         done();
       });
   });
