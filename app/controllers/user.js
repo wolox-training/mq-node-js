@@ -2,50 +2,18 @@ const User = require('../models').User,
   logger = require('../logger'),
   jwt = require('../services/jwt'),
   errors = require('../errors'),
-  bcryptService = require('../services/bcrypt'),
-  secret = require('../../config/index').common.session.secret;
-
-const errorMsgs = {
-  nonExistingUser: 'User does not exist',
-  invalidPassword: 'Invalid password',
-  emailIsAlreadyRegistered: 'email is already registered',
-  insufficientPermissions: 'User is not authorized'
-};
-exports.badRequestErrorMessages = errorMsgs;
+  errorMessages = require('../errors').errorMessages,
+  bcryptService = require('../services/bcrypt');
 
 exports.logIn = ({ user }, res, next) =>
   User.find({ where: { email: user.email } })
     .then(dbUser => {
       if (!dbUser) {
-        throw errors.badRequest(errorMsgs.nonExistingUser);
+        throw errors.badRequest(errorMessages.nonExistingUser);
       } else {
         return bcryptService.isPasswordValid(user.password, dbUser).then(validPassword => {
           if (!validPassword) {
-            throw errors.badRequest(errorMsgs.invalidPassword);
-          } else {
-            const payload = { email: user.email };
-            const token = jwt.encode(payload, secret);
-            res
-              .status(200)
-              .json({ token })
-              .end();
-          }
-        });
-      }
-    })
-    .catch(next);
-
-exports.badRequestErrorMessages = errorMsgs;
-
-exports.logIn = ({ user }, res, next) =>
-  User.find({ where: { email: user.email } })
-    .then(dbUser => {
-      if (!dbUser) {
-        throw errors.badRequest(errorMsgs.nonExistingUser);
-      } else {
-        return bcryptService.isPasswordValid(user.password, dbUser).then(validPassword => {
-          if (!validPassword) {
-            throw errors.badRequest(errorMsgs.invalidPassword);
+            throw errors.badRequest(errorMessages.invalidPassword);
           } else {
             const payload = { email: user.email };
             const token = jwt.encode(payload);
@@ -72,7 +40,7 @@ const createUser = (user, isAdmin = false) =>
 exports.signUp = ({ user }, res, next) =>
   emailIsRegistered(user.email)
     .then(isRegistered => {
-      if (isRegistered) throw errors.badRequest(errorMsgs.emailIsAlreadyRegistered);
+      if (isRegistered) throw errors.badRequest(errorMessages.emailIsAlreadyRegistered);
       else
         return createUser(user).then(newUser => {
           logger.info(`User ${newUser.lastName}, ${newUser.firstName} created successfuly`);
@@ -93,7 +61,7 @@ exports.createAdmin = (req, res, next) =>
         throw errors.internalServerError();
       }
 
-      if (!requestingUser.isAdmin) throw errors.badRequest(errorMsgs.insufficientPermissions);
+      if (!requestingUser.isAdmin) throw errors.badRequest(errorMessages.insufficientPermissions);
 
       return User.find({ where: { email: req.user.email } }).then(inDbUser => {
         if (inDbUser) {
