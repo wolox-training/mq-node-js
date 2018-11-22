@@ -7,6 +7,7 @@ const chai = require('chai'),
   errors = require('../app/errors'),
   testHelpers = require('./testHelpers'),
   nock = require('nock'),
+  itemsPerPage = Number.parseInt(process.env.DEFAULT_ITEMS_PER_PAGE),
   errorMessages = require('../app/errors').errorMessages;
 
 chai.use(chaiSubset);
@@ -63,6 +64,11 @@ const albums = [
     title: 'distinctio laborum qui'
   }
 ];
+
+afterEach('clean possible unused mocks', done => {
+  nock.cleanAll();
+  done();
+});
 
 describe('/albums GET', () => {
   it('should successfully return the albums', done => {
@@ -276,6 +282,100 @@ describe('/users/:userId/albums GET', () => {
             .then(r => {
               r.should.have.status(200);
               expect(r.body.length).to.equal(albumIdsToBuy.length);
+              expect(r.body.map(i => i.albumId)).to.containSubset(albumIdsToBuy);
+              nocks.forEach(n => n.done());
+              done();
+            })
+        )
+      );
+    });
+  });
+
+  it('should list only the amount of items per page', done => {
+    const albumIdsToBuy = [...Array(itemsPerPage + 1).keys()].map(i => i + 1);
+
+    const nocks = albumIdsToBuy.map(albumId =>
+      nock(process.env.ALBUMS_HOST)
+        .get(process.env.ALBUMS_PATH)
+        .query({ id: albumId })
+        .reply(200, [albums.find(a => a.id === albumId)], { 'Content-Type': 'application/json' })
+    );
+
+    testHelpers.signUpTestUser().then(res => {
+      const { email, id } = res.body;
+      testHelpers.logInAndReturnToken(email).then(token =>
+        Promise.all(albumIdsToBuy.map(albumId => testHelpers.purchaseAlbum(albumId, token))).then(() =>
+          chai
+            .request(server)
+            .get(`/users/${id}/albums`)
+            .set('token', token)
+            .send()
+            .then(r => {
+              r.should.have.status(200);
+              expect(r.body.length).to.equal(itemsPerPage);
+              expect(albumIdsToBuy).to.containSubset(r.body.map(i => i.albumId));
+              nocks.forEach(n => n.done());
+              done();
+            })
+        )
+      );
+    });
+  });
+
+  it('should return only 1 item on page 1 when requesting itemsPerPage + 1 items', done => {
+    const albumIdsToBuy = [...Array(itemsPerPage + 1).keys()].map(i => i + 1);
+
+    const nocks = albumIdsToBuy.map(albumId =>
+      nock(process.env.ALBUMS_HOST)
+        .get(process.env.ALBUMS_PATH)
+        .query({ id: albumId })
+        .reply(200, [albums.find(a => a.id === albumId)], { 'Content-Type': 'application/json' })
+    );
+
+    testHelpers.signUpTestUser().then(res => {
+      const { email, id } = res.body;
+      testHelpers.logInAndReturnToken(email).then(token =>
+        Promise.all(albumIdsToBuy.map(albumId => testHelpers.purchaseAlbum(albumId, token))).then(() =>
+          chai
+            .request(server)
+            .get(`/users/${id}/albums?page=1`)
+            .set('token', token)
+            .send()
+            .then(r => {
+              r.should.have.status(200);
+              expect(r.body.length).to.equal(1);
+              expect(albumIdsToBuy).to.containSubset(r.body.map(i => i.albumId));
+              nocks.forEach(n => n.done());
+              done();
+            })
+        )
+      );
+    });
+  });
+
+  it('should return the specified limit=itemsPerPage*2 on page 0', done => {
+    const albumIdsToBuy = [...Array(itemsPerPage * 2).keys()].map(i => i + 1);
+
+    const nocks = albumIdsToBuy.map(albumId =>
+      nock(process.env.ALBUMS_HOST)
+        .get(process.env.ALBUMS_PATH)
+        .query({ id: albumId })
+        .reply(200, [albums.find(a => a.id === albumId)], { 'Content-Type': 'application/json' })
+    );
+
+    testHelpers.signUpTestUser().then(res => {
+      const { email, id } = res.body;
+      testHelpers.logInAndReturnToken(email).then(token =>
+        Promise.all(albumIdsToBuy.map(albumId => testHelpers.purchaseAlbum(albumId, token))).then(() =>
+          chai
+            .request(server)
+            .get(`/users/${id}/albums?limit=${itemsPerPage * 2}&page=0`)
+            .set('token', token)
+            .send()
+            .then(r => {
+              r.should.have.status(200);
+              expect(r.body.length).to.equal(itemsPerPage * 2);
+              expect(albumIdsToBuy).to.containSubset(r.body.map(i => i.albumId));
               expect(r.body.map(i => i.albumId)).to.containSubset(albumIdsToBuy);
               nocks.forEach(n => n.done());
               done();

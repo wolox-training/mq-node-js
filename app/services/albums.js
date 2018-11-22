@@ -6,13 +6,12 @@ exports.getAlbums = () =>
     throw errors.resourceNotFound(errors.errorMessages.albumsNotAvailable);
   });
 
-exports.getAlbum = albumId => {
-  return request({ uri: `${process.env.ALBUMS_HOST + process.env.ALBUMS_PATH}?id=${albumId}`, json: true })
-    .catch(e => {
+exports.getAlbum = albumId =>
+  request({ uri: `${process.env.ALBUMS_HOST + process.env.ALBUMS_PATH}?id=${albumId}`, json: true })
+    .catch(() => {
       throw errors.resourceNotFound(errors.errorMessages.albumNotAvailable);
     })
     .then(res => {
       if (!res[0]) throw errors.resourceNotFound(errors.errorMessages.albumNotAvailable);
       return res[0];
     });
-};

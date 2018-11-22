@@ -27,5 +27,10 @@ module.exports = (sequelize, DataTypes) => {
       throw errors.databaseError(e.message);
     });
 
+  User.findAllModels = where =>
+    User.findAndCountAll(where).catch(e => {
+      throw errors.databaseError(e.message);
+    });
+
   return User;
 };

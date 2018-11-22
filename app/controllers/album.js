@@ -2,13 +2,14 @@ const jwt = require('../services/jwt'),
   errors = require('../errors'),
   PurchasedAlbum = require('../models').PurchasedAlbum,
   albumsService = require('../services/albums'),
-  errorMessages = require('../errors').errorMessages;
+  errorMessages = require('../errors').errorMessages,
+  responsePaginationHelper = require('./responsePaginationHelper');
 
 exports.listAlbums = (req, res, next) =>
   jwt
     .getUserForToken(req.headers.token)
     .then(user => albumsService.getAlbums().then(r => res.status(200).send(r)))
-    .catch(e => next(errors.resourceNotFound(errorMessages.albumsNotAvailable)));
+    .catch(next);
 
 exports.purchaseAlbum = (req, res, next) =>
   jwt
@@ -17,7 +18,7 @@ exports.purchaseAlbum = (req, res, next) =>
       albumsService.getAlbum(req.params.id).then(album =>
         PurchasedAlbum.find({ where: { albumId: album.id, userId: user.id } }).then(existingAlbum => {
           if (existingAlbum) throw errors.badRequest(errorMessages.albumAlreadyPurchased);
-          else {
+          else
             return PurchasedAlbum.createModel({ albumId: album.id, userId: user.id }).then(
               indbPurchasedAlbum => {
                 res
@@ -26,7 +27,6 @@ exports.purchaseAlbum = (req, res, next) =>
                   .end();
               }
             );
-          }
         })
       )
     )
@@ -37,12 +37,16 @@ exports.listPurchasedAlbums = (req, res, next) =>
     const userId = Number.parseInt(req.params.userId);
     if (!user.isAdmin && userId !== user.id)
       throw errors.badRequest(errorMessages.nonAdminUsersCanOnlySeeTheirPurchasedAlbums);
-    return PurchasedAlbum.findAll({ where: { userId: user.id } })
-      .then(albums =>
+    return PurchasedAlbum.findAllModels({
+      where: { userId: user.id },
+      limit: responsePaginationHelper.parsePageLimit(req.query),
+      offset: responsePaginationHelper.parseOffset(req.query)
+    })
+      .then(dbResponse =>
         res
           .status(200)
-          .send(albums)
+          .send(dbResponse.rows)
           .end()
       )
-      .catch(e => next(errors.databaseError(errorMessages.databaseFailed)));
+      .catch(next);
   });
