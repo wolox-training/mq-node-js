@@ -16,17 +16,16 @@ exports.purchaseAlbum = (req, res, next) =>
     .getUserForToken(req.headers.token)
     .then(user =>
       albumsService.getAlbum(req.params.id).then(album =>
-        PurchasedAlbum.find({ where: { albumId: album.id, userId: user.id } }).then(existingAlbum => {
+        PurchasedAlbum.findOneBy({ where: { albumId: album.id, userId: user.id } }).then(existingAlbum => {
           if (existingAlbum) throw errors.badRequest(errorMessages.albumAlreadyPurchased);
-          else
-            return PurchasedAlbum.createModel({ albumId: album.id, userId: user.id }).then(
-              indbPurchasedAlbum => {
-                res
-                  .status(201)
-                  .send(indbPurchasedAlbum)
-                  .end();
-              }
-            );
+          return PurchasedAlbum.createModel({ albumId: album.id, userId: user.id }).then(
+            indbPurchasedAlbum => {
+              res
+                .status(201)
+                .send(indbPurchasedAlbum)
+                .end();
+            }
+          );
         })
       )
     )
