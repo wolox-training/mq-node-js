@@ -8,7 +8,7 @@ exports.listAlbums = (req, res, next) =>
   jwt
     .getUserForToken(req.headers.token)
     .then(user => albumsService.getAlbums().then(r => res.status(200).send(r)))
-    .catch(e => next(errors.resourceNotFound(errorMessages.albumsNotAvailable)));
+    .catch(next);
 
 exports.purchaseAlbum = (req, res, next) =>
   jwt

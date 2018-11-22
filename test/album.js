@@ -64,6 +64,11 @@ const albums = [
   }
 ];
 
+afterEach('clean possible unused mocks', done => {
+  nock.cleanAll();
+  done();
+});
+
 describe('/albums GET', () => {
   it('should successfully return the albums', done => {
     const n = nock(process.env.ALBUMS_HOST)

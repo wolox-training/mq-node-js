@@ -7,7 +7,8 @@ module.exports = (sequelize, DataTypes) => {
   const PurchasedAlbum = sequelize.define(
     'PurchasedAlbum',
     {
-      albumId: { type: DataTypes.INTEGER, allowNull: false }
+      albumId: { type: DataTypes.INTEGER, allowNull: false },
+      userId: { type: DataTypes.INTEGER, allowNull: false, foreignKey: true }
     },
     {
       underscored: true,
