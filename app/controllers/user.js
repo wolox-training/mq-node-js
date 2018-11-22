@@ -3,7 +3,8 @@ const User = require('../models').User,
   jwt = require('../services/jwt'),
   errors = require('../errors'),
   errorMessages = require('../errors').errorMessages,
-  bcryptService = require('../services/bcrypt');
+  bcryptService = require('../services/bcrypt'),
+  mailer = require('../services/mailer');
 
 exports.logIn = ({ user }, res, next) =>
   User.find({ where: { email: user.email } })
@@ -32,10 +33,14 @@ const emailIsRegistered = email =>
     throw errors.databaseError(e.message);
   });
 
-const createUser = (user, isAdmin = false) =>
+const createUser = (userFields, isAdmin = false) =>
   bcryptService
-    .hashPassword(user.password)
-    .then(hashedPassword => User.create({ ...user, password: hashedPassword, isAdmin }));
+    .hashPassword(userFields.password)
+    .then(hashedPassword => User.create({ ...userFields, password: hashedPassword, isAdmin }))
+    .then(user => {
+      mailer.welcomeUser(user);
+      return user;
+    });
 
 exports.signUp = ({ user }, res, next) =>
   emailIsRegistered(user.email)
