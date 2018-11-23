@@ -7,7 +7,8 @@ module.exports = (sequelize, DataTypes) => {
   const PurchasedAlbum = sequelize.define(
     'PurchasedAlbum',
     {
-      albumId: { type: DataTypes.INTEGER, allowNull: false }
+      albumId: { type: DataTypes.INTEGER, allowNull: false },
+      userId: { type: DataTypes.INTEGER, allowNull: false, foreignKey: true }
     },
     {
       underscored: true,
@@ -25,6 +26,16 @@ module.exports = (sequelize, DataTypes) => {
 
   PurchasedAlbum.createModel = purchasedAlbum =>
     PurchasedAlbum.create(purchasedAlbum).catch(e => {
+      throw errors.databaseError(e.message);
+    });
+
+  PurchasedAlbum.findAllModels = where =>
+    PurchasedAlbum.findAndCountAll(where).catch(e => {
+      throw errors.databaseError(e.message);
+    });
+
+  PurchasedAlbum.findOneBy = where =>
+    PurchasedAlbum.find(where).catch(e => {
       throw errors.databaseError(e.message);
     });
 
