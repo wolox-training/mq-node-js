@@ -29,5 +29,15 @@ module.exports = (sequelize, DataTypes) => {
       throw errors.databaseError(e.message);
     });
 
+  PurchasedAlbum.findAllModels = where =>
+    PurchasedAlbum.findAndCountAll(where).catch(e => {
+      throw errors.databaseError(e.message);
+    });
+
+  PurchasedAlbum.findOneBy = where =>
+    PurchasedAlbum.find(where).catch(e => {
+      throw errors.databaseError(e.message);
+    });
+
   return PurchasedAlbum;
 };

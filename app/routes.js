@@ -7,6 +7,7 @@ const userController = require('./controllers/user'),
     validateFirstName,
     validateLastName,
     validateSignUp,
+    validateUserId,
     validateToken,
     validateErrors,
     validateTokenCanBeDecoded
@@ -22,6 +23,11 @@ exports.init = app => {
   app.post('/users/sessions', [validateEmail, validatePassword, validateLogin], userController.logIn);
   app.get('/albums', [validateToken, validateErrors], albumsController.listAlbums);
   app.post('/albums/:id', [validateToken, validateAlbumId, validateErrors], albumsController.purchaseAlbum);
+  app.get(
+    '/users/:userId/albums',
+    [validateToken, validateUserId, validateErrors],
+    albumsController.listPurchasedAlbums
+  );
   app.get('/users', [validateToken, validateErrors, validateTokenCanBeDecoded], userController.listUsers);
   app.post(
     '/admin/users',

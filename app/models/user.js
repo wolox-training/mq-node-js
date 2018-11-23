@@ -27,5 +27,20 @@ module.exports = (sequelize, DataTypes) => {
       throw errors.databaseError(e.message);
     });
 
+  User.findAllModels = where =>
+    User.findAndCountAll(where).catch(e => {
+      throw errors.databaseError(e.message);
+    });
+
+  User.findUser = email =>
+    User.find({ where: { email } })
+      .catch(e => {
+        throw errors.databaseError(e.message);
+      })
+      .then(user => {
+        if (!user) throw errors.databaseError(errors.errorMessages.nonExistingUser);
+        return user;
+      });
+
   return User;
 };
