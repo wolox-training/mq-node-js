@@ -28,10 +28,17 @@ exports.init = app => {
     [validateToken, validateUserId, validateErrors],
     albumsController.listPurchasedAlbums
   );
+  app.get(
+    '/users/albums/:id/photos',
+    [validateToken, validateAlbumId, validateErrors],
+    albumsController.listAlbumPhotos
+  );
   app.get('/users', [validateToken, validateErrors, validateTokenCanBeDecoded], userController.listUsers);
   app.post(
     '/admin/users',
     [validateToken, validateFirstName, validateLastName, validateEmail, validatePassword, validateSignUp],
     userController.createAdmin
   );
+
+  app.post('/users/sessions/invalidate_all', [validateToken], userController.invalidateAllTokens);
 };

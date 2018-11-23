@@ -17,11 +17,9 @@ exports.logIn = ({ user }, res, next) =>
           if (!validPassword) {
             throw errors.badRequest(errorMessages.invalidPassword);
           } else {
-            const payload = { email: user.email };
-            const token = jwt.encode(payload);
             res
               .status(200)
-              .send(token)
+              .send(jwt.generateTokenForUser(dbUser))
               .end();
           }
         });
@@ -62,11 +60,6 @@ exports.createAdmin = (req, res, next) =>
   jwt
     .getUserForToken(req.headers.token)
     .then(requestingUser => {
-      if (!requestingUser) {
-        // correctly decoded token belongs to no user, perhaps it was deleted without invalidating token?
-        throw errors.internalServerError();
-      }
-
       if (!requestingUser.isAdmin) throw errors.badRequest(errorMessages.insufficientPermissions);
 
       return User.find({ where: { email: req.user.email } }).then(inDbUser => {
@@ -118,4 +111,11 @@ exports.listUsers = (req, res, next) =>
         .send({ users: toSendUsers })
         .end();
     })
+    .catch(next);
+
+exports.invalidateAllTokens = (req, res, next) =>
+  jwt
+    .getUserForToken(req.headers.token)
+    .then(user => jwt.invalidateAllTokensForUser(user))
+    .then(() => res.status(200).end())
     .catch(next);

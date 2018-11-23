@@ -10,6 +10,7 @@ const statusCodes = {
   [errors.EMAIL_IS_NOT_REGISTERED]: 400,
   [errors.EMAIL_IS_REGISTERED]: 400,
   [errors.INTERNAL_SERVER_ERROR]: 500,
+  [errors.AUTHENTICATION_ERROR]: 401,
   [errors.RESOURCE_NOT_FOUND]: 404
 };
 
