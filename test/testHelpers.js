@@ -60,3 +60,10 @@ exports.getUsersEmailsInPageWithLimit = (token, page, limit) =>
     .set('token', token)
     .send()
     .then(userListResponse => userListResponse.body.users.map(u => u.email));
+
+exports.purchaseAlbum = (albumId, token) =>
+  chai
+    .request(server)
+    .post(`/albums/${albumId}`)
+    .set('token', token)
+    .send();

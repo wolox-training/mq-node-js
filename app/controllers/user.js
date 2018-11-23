@@ -4,7 +4,8 @@ const User = require('../models').User,
   errors = require('../errors'),
   errorMessages = require('../errors').errorMessages,
   bcryptService = require('../services/bcrypt'),
-  mailer = require('../services/mailer');
+  mailer = require('../services/mailer'),
+  responsePaginationHelper = require('./responsePaginationHelper');
 
 exports.logIn = ({ user }, res, next) =>
   User.find({ where: { email: user.email } })
@@ -100,15 +101,13 @@ exports.createAdmin = (req, res, next) =>
     })
     .catch(next);
 
-exports.listUsers = (req, res, next) => {
-  req.query.page = Number.parseInt(req.query.page);
-  if (!Number.isSafeInteger(req.query.page)) req.query.page = 0;
-
-  req.query.limit = Number.parseInt(req.query.limit);
-  if (!Number.isSafeInteger(req.query.limit)) req.query.limit = process.env.DEFAULT_ITEMS_PER_PAGE;
-  return User.findAll({ limit: req.query.limit, offset: req.query.page * req.query.limit })
+exports.listUsers = (req, res, next) =>
+  User.findAllModels({
+    limit: responsePaginationHelper.parsePageLimit(req.query),
+    offset: responsePaginationHelper.parseOffset(req.query)
+  })
     .then(dbUsers => {
-      const toSendUsers = dbUsers.map(u => ({
+      const toSendUsers = dbUsers.rows.map(u => ({
         firstName: u.firstName,
         lastName: u.lastName,
         email: u.email
@@ -119,5 +118,4 @@ exports.listUsers = (req, res, next) => {
         .send({ users: toSendUsers })
         .end();
     })
-    .catch(e => next(errors.databaseError('Database failed')));
-};
+    .catch(next);

@@ -24,6 +24,7 @@ exports.errorMessages = {
   tokenReferencesNonExistentUser: 'Token is referencing non-existing user',
   databaseFailed: 'Database failed',
   albumsNotAvailable: 'Albums not available',
+  albumNotAvailable: 'Album not available',
   emailIsRequired: 'The email is required',
   emailMustBelongToWolox: 'Email must belong to wolox',
   textFieldIsRequired: field => `The ${field} field is required`,
@@ -35,5 +36,8 @@ exports.errorMessages = {
   tokenIsRequired: 'Token is required',
   tokenCantBeEmpty: 'Token cant be empty',
   bcryptHashFailed: 'Bcrypt password hash failed',
-  bcryptCompareFailed: 'Bcrypt password hash compare failed'
+  bcryptCompareFailed: 'Bcrypt password hash compare failed',
+  albumIdMustBeNumber: 'The album id must be a number',
+  albumAlreadyPurchased: 'The album was already purchased',
+  nonAdminUsersCanOnlySeeTheirPurchasedAlbums: 'Non admin users can only access their own purchased albums'
 };

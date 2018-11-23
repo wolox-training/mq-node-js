@@ -1,4 +1,4 @@
-const { body, header, validationResult } = require('express-validator/check'),
+const { body, header, validationResult, param } = require('express-validator/check'),
   errors = require('../errors'),
   jwt = require('../services/jwt'),
   errorMessages = require('../errors').errorMessages;
@@ -82,3 +82,7 @@ exports.validateToken = header('token')
   .not()
   .isEmpty()
   .withMessage(errorMessages.tokenCantBeEmpty);
+
+exports.validateUserId = param('userId')
+  .isNumeric()
+  .withMessage(errorMessages.usersIdMustBeANumber);

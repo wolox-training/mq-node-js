@@ -9,8 +9,8 @@ exports.decode = token => jwtsimple.decode(token, secret);
 exports.getUserForToken = token => {
   try {
     const { email } = exports.decode(token);
-    return User.find({ where: { email } });
+    return User.findUser(email);
   } catch (e) {
-    throw errors.badRequest('Invalid Token');
+    throw errors.badRequest(errors.errorMessages.invalidToken);
   }
 };
