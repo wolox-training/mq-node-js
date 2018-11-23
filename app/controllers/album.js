@@ -5,6 +5,7 @@ const jwt = require('../services/jwt'),
   errorMessages = require('../errors').errorMessages,
   responsePaginationHelper = require('./responsePaginationHelper');
 
+
 exports.listAlbums = (req, res, next) =>
   jwt
     .getUserForToken(req.headers.token)
@@ -26,6 +27,7 @@ exports.purchaseAlbum = (req, res, next) =>
                 .end();
             }
           );
+
         })
       )
     )
@@ -49,3 +51,4 @@ exports.listPurchasedAlbums = (req, res, next) =>
       )
       .catch(next);
   });
+
