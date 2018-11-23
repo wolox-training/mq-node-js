@@ -16,11 +16,9 @@ exports.logIn = ({ user }, res, next) =>
           if (!validPassword) {
             throw errors.badRequest(errorMessages.invalidPassword);
           } else {
-            const payload = { email: user.email, timestamp: Date.now() };
-            const token = jwt.encode(payload);
             res
               .status(200)
-              .send(token)
+              .send(jwt.generateTokenForUser(dbUser))
               .end();
           }
         });
