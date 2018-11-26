@@ -8,11 +8,14 @@ exports.getAlbums = () =>
 
 exports.getAlbum = albumId =>
   request({ uri: `${process.env.ALBUMS_HOST + process.env.ALBUMS_PATH}?id=${albumId}`, json: true })
-    .catch(() => {
+    .catch(e => {
+      console.log(`\n\n\n${e.message}\n\n\n`);
       throw errors.resourceNotFound(errors.errorMessages.albumNotAvailable);
     })
     .then(res => {
-      if (!res[0]) throw errors.resourceNotFound(errors.errorMessages.albumNotAvailable);
+      if (!res[0]) {
+        throw errors.resourceNotFound(errors.errorMessages.albumNotAvailable);
+      }
       return res[0];
     });
 
