@@ -1,5 +1,6 @@
 const chai = require('chai'),
-  server = require('./../app');
+  server = require('./../app'),
+  User = require('../app/models').User;
 
 exports.testPassword = 'somepassword1';
 exports.testEmail = 'someemail@wolox.com.ar';
@@ -28,9 +29,15 @@ exports.signUpTestUser = () =>
 exports.signUpTestUserAndReturnEmail = () => exports.signUpTestUser().then(res => res.body.email);
 
 exports.signUpMultipleUsers = amount => {
-  const emailPromises = [...Array(amount).keys()].map(number => exports.signUpTestUserAndReturnEmail());
+  const emailPromises = [...Array(amount).keys()].map(() => exports.signUpTestUserAndReturnEmail());
   return Promise.all(emailPromises);
 };
+
+exports.signUpTestUserAsAdmin = () =>
+  exports
+    .signUpTestUserAndReturnEmail()
+    .then(email => User.find({ where: { email } }))
+    .then(user => user.update({ isAdmin: true }));
 
 beforeEach('reset already used emails', done => {
   exports.alreadyUsedEmails.splice(0, exports.alreadyUsedEmails.length);

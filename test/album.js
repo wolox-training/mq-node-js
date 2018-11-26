@@ -1243,7 +1243,7 @@ describe('/albums/:id POST', () => {
       .set('token', 'someinvalidtoken')
       .send()
       .catch(e => {
-        e.response.should.have.status(400);
+        e.response.should.have.status(401);
         expect(e.response.body.message).to.equal(errorMessages.invalidToken);
         done();
       });

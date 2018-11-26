@@ -8,12 +8,14 @@ exports.DATABASE_ERROR = 'database_error';
 exports.BAD_REQUEST = 'bad_request';
 exports.BCRYPT_ERROR = 'bcrypt_error';
 exports.INTERNAL_SERVER_ERROR = 'internal_server_error';
+exports.AUTHENTICATION_ERROR = 'authentication_error';
 exports.RESOURCE_NOT_FOUND = 'resource_not_found';
 exports.defaultError = message => internalError(message, exports.DEFAULT_ERROR);
 exports.databaseError = message => internalError(message, exports.DATABASE_ERROR);
 exports.badRequest = message => internalError(message, exports.BAD_REQUEST);
 exports.bcryptError = message => internalError(message, exports.BCRYPT_ERROR);
 exports.internalServerError = message => internalError(message, exports.INTERNAL_SERVER_ERROR);
+exports.authenticationError = message => internalError(message, exports.AUTHENTICATION_ERROR);
 exports.resourceNotFound = message => internalError(message, exports.RESOURCE_NOT_FOUND);
 
 exports.errorMessages = {
@@ -41,5 +43,8 @@ exports.errorMessages = {
   albumAlreadyPurchased: 'The album was already purchased',
   nonAdminUsersCanOnlySeeTheirPurchasedAlbums: 'Non admin users can only access their own purchased albums',
   youCanOnlyViewPhotosOfYourPurchasedAlbums: 'You can only view photos of your purchased albums',
-  albumPhotosNotAvailable: 'albumPhotosNotAvailable'
+  albumPhotosNotAvailable: 'albumPhotosNotAvailable',
+  userNotFound: 'User not found',
+  tokenExpired: 'Token expired',
+  insufficientPermissions: 'You must be admin to perform this action'
 };

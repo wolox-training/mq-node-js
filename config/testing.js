@@ -9,6 +9,9 @@ exports.config = {
     },
     session: {
       secret: 'some-super-secret'
+    },
+    api: {
+      userSessionDurationInSeconds: 1
     }
   }
 };
