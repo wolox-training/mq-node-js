@@ -14,6 +14,13 @@ exports.getNotUsedEmail = () => {
   return email;
 };
 
+exports.getUsers = token =>
+  chai
+    .request(server)
+    .get('/users')
+    .set('token', token)
+    .send();
+
 exports.signUpTestUser = () =>
   chai
     .request(server)
