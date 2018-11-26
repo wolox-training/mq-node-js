@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       email: { type: DataTypes.STRING, unique: true, allowNull: false },
       password: { type: DataTypes.STRING, allowNull: false },
       isAdmin: { type: DataTypes.BOOLEAN, allowNull: false },
-      mostRecentTokenTimestamp: { type: DataTypes.DATE, allowNull: true, defaultValue: null }
+      oldestTokenTimestamp: { type: DataTypes.DATE, allowNull: true, defaultValue: null }
     },
     {
       underscored: true,
