@@ -18,16 +18,11 @@ describe('/users GET', () => {
   it('should successfully return the registered user', done => {
     testHelpers.signUpTestUserAndReturnEmail().then(signedUpEmail =>
       testHelpers.logInAndReturnToken(signedUpEmail).then(token =>
-        chai
-          .request(server)
-          .get('/users')
-          .set('token', token)
-          .send()
-          .then(userListResponse => {
-            should.equal(userListResponse.body.users[0].email, signedUpEmail);
-            dictum.chai(userListResponse);
-            done();
-          })
+        testHelpers.getUsers(token).then(userListResponse => {
+          should.equal(userListResponse.body.users[0].email, signedUpEmail);
+          dictum.chai(userListResponse);
+          done();
+        })
       )
     );
   });
@@ -155,8 +150,8 @@ describe('/users GET', () => {
       .set('token', 'some invalid token')
       .send()
       .catch(e => {
-        should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
-        should.equal(e.status, 400);
+        should.equal(e.response.body.internal_code, errors.AUTHENTICATION_ERROR);
+        should.equal(e.status, 401);
         expect(e.response.body.message).to.equal(errorMessages.invalidToken);
         done();
       });
@@ -535,9 +530,6 @@ describe('/admin/users POST', () => {
               dictum.chai(res);
               done();
             });
-          })
-          .catch(e => {
-            console.log(`\n\n\n${adminRelatedToken}\n\n\n`);
           })
       )
     );
