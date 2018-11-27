@@ -32,9 +32,7 @@ exports.init = app => {
     [validateToken, validateAlbumId, validateErrors],
     albumsController.listAlbumPhotos
   );
-
   app.get('/users', [validateToken, validateErrors], userController.listUsers);
-
   app.post(
     '/admin/users',
     [validateToken, validateFirstName, validateLastName, validateEmail, validatePassword, validateSignUp],

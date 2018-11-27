@@ -4,6 +4,7 @@ const User = require('../models').User,
   errors = require('../errors'),
   errorMessages = require('../errors').errorMessages,
   bcryptService = require('../services/bcrypt'),
+  mailer = require('../services/mailer'),
   responsePaginationHelper = require('./responsePaginationHelper');
 
 exports.logIn = ({ user }, res, next) =>
@@ -33,10 +34,14 @@ const emailIsRegistered = email =>
     throw errors.databaseError(e.message);
   });
 
-const createUser = (user, isAdmin = false) =>
+const createUser = (userFields, isAdmin = false) =>
   bcryptService
-    .hashPassword(user.password)
-    .then(hashedPassword => User.createModel({ ...user, password: hashedPassword, isAdmin }));
+    .hashPassword(userFields.password)
+    .then(hashedPassword => User.createModel({ ...userFields, password: hashedPassword, isAdmin }))
+    .then(user => {
+      mailer.welcomeUser(user);
+      return user;
+    });
 
 exports.signUp = ({ user }, res, next) =>
   emailIsRegistered(user.email)

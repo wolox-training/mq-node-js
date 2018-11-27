@@ -1539,6 +1539,7 @@ describe('/users/albums/:id/photos GET', () => {
 
   it('should fail because the album was not purchased', done => {
     const notBoughtAlbumId = 1;
+
     const response = [albumsPhotos.find(a => a.id === notBoughtAlbumId)];
 
     const albumPhotosNock = nock(process.env.ALBUMS_HOST)

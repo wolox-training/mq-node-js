@@ -20,12 +20,9 @@
     "pretest": "npm run lint",
     "prestart": "npm run lint",
     "migrations": "./node_modules/.bin/sequelize db:migrate",
-    "migrations-test":
-      "NODE_ENV=testing ./node_modules/.bin/sequelize db:migrate",
-    "migrations-test-undo-all":
-      "NODE_ENV=testing ./node_modules/.bin/sequelize db:migrate:undo:all",
+    "migrations-test": "NODE_ENV=testing ./node_modules/.bin/sequelize db:migrate",
+    "migrations-test-undo-all": "NODE_ENV=testing ./node_modules/.bin/sequelize db:migrate:undo:all",
     "migrations-undo-all": "./node_modules/.bin/sequelize db:migrate:undo:all",
-
     "start": "./node_modules/.bin/nodemon --inspect app.js",
     "test": "NODE_ENV=testing ./node_modules/mocha/bin/_mocha --timeout 6000 --exit --compilers js:babel-core/register test/app.js && npm run nsp",
     "test-inspect": "NODE_ENV=testing node --inspect --debug-brk ./node_modules/mocha/bin/_mocha --compilers js:babel-core/register test/app.js"
@@ -53,6 +50,7 @@
     "jwt-simple": "^0.5.1",
     "moment": "^2.22.2",
     "morgan": "^1.9.0",
+    "nodemailer": "^4.7.0",
     "pg": "^7.4.1",
     "pg-native": "^2.2.0",
     "request": "^2.88.0",
