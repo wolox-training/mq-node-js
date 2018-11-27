@@ -9,8 +9,7 @@ const userController = require('./controllers/user'),
     validateSignUp,
     validateUserId,
     validateToken,
-    validateErrors,
-    validateTokenCanBeDecoded
+    validateErrors
   } = require('./middlewares/user'),
   { validateAlbumId } = require('./middlewares/album');
 
@@ -33,10 +32,14 @@ exports.init = app => {
     [validateToken, validateAlbumId, validateErrors],
     albumsController.listAlbumPhotos
   );
-  app.get('/users', [validateToken, validateErrors, validateTokenCanBeDecoded], userController.listUsers);
+
+  app.get('/users', [validateToken, validateErrors], userController.listUsers);
+
   app.post(
     '/admin/users',
     [validateToken, validateFirstName, validateLastName, validateEmail, validatePassword, validateSignUp],
     userController.createAdmin
   );
+
+  app.post('/users/sessions/invalidate_all', [validateToken], userController.invalidateAllTokens);
 };

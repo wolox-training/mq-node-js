@@ -1539,6 +1539,15 @@ describe('/users/albums/:id/photos GET', () => {
 
   it('should fail because the album was not purchased', done => {
     const notBoughtAlbumId = 1;
+    const response = [albumsPhotos.find(a => a.id === notBoughtAlbumId)];
+
+    const albumPhotosNock = nock(process.env.ALBUMS_HOST)
+      .get(process.env.ALBUMS_PATH)
+      .query({ id: notBoughtAlbumId })
+      .reply(200, response, {
+        'Content-Type': 'application/json'
+      });
+
     testHelpers.signUpTestUser().then(res => {
       const { email, id } = res.body;
       testHelpers.logInAndReturnToken(email).then(token =>
@@ -1550,6 +1559,7 @@ describe('/users/albums/:id/photos GET', () => {
           .catch(e => {
             e.response.should.have.status(400);
             expect(e.response.body.message).to.equal(errorMessages.youCanOnlyViewPhotosOfYourPurchasedAlbums);
+            albumPhotosNock.done();
             done();
           })
       );

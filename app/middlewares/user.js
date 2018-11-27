@@ -1,6 +1,5 @@
 const { body, header, validationResult, param } = require('express-validator/check'),
   errors = require('../errors'),
-  jwt = require('../services/jwt'),
   errorMessages = require('../errors').errorMessages;
 
 const emailBelongsToWolox = email => {
@@ -66,15 +65,6 @@ exports.validateToken = header('token')
   .not()
   .isEmpty()
   .withMessage(errorMessages.tokenCantBeEmpty);
-
-exports.validateTokenCanBeDecoded = (req, res, next) => {
-  try {
-    jwt.decode(req.headers.token);
-    next();
-  } catch (e) {
-    next(errors.badRequest(errorMessages.invalidToken));
-  }
-};
 
 exports.validateToken = header('token')
   .exists()

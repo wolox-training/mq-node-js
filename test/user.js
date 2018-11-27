@@ -18,16 +18,11 @@ describe('/users GET', () => {
   it('should successfully return the registered user', done => {
     testHelpers.signUpTestUserAndReturnEmail().then(signedUpEmail =>
       testHelpers.logInAndReturnToken(signedUpEmail).then(token =>
-        chai
-          .request(server)
-          .get('/users')
-          .set('token', token)
-          .send()
-          .then(userListResponse => {
-            should.equal(userListResponse.body.users[0].email, signedUpEmail);
-            dictum.chai(userListResponse);
-            done();
-          })
+        testHelpers.getUsers(token).then(userListResponse => {
+          should.equal(userListResponse.body.users[0].email, signedUpEmail);
+          dictum.chai(userListResponse);
+          done();
+        })
       )
     );
   });
@@ -155,8 +150,8 @@ describe('/users GET', () => {
       .set('token', 'some invalid token')
       .send()
       .catch(e => {
-        should.equal(e.response.body.internal_code, errors.BAD_REQUEST);
-        should.equal(e.status, 400);
+        should.equal(e.response.body.internal_code, errors.AUTHENTICATION_ERROR);
+        should.equal(e.status, 401);
         expect(e.response.body.message).to.equal(errorMessages.invalidToken);
         done();
       });
@@ -536,9 +531,6 @@ describe('/admin/users POST', () => {
               done();
             });
           })
-          .catch(e => {
-            console.log(`\n\n\n${adminRelatedToken}\n\n\n`);
-          })
       )
     );
   });
@@ -573,5 +565,41 @@ describe('/admin/users POST', () => {
         );
       })
     );
+  });
+});
+
+describe('/users/sessions/invalidate_all POST', () => {
+  it('should successfully clear all users tokens and old token should not work', done => {
+    testHelpers
+      .signUpTestUserAsAdmin()
+      .then(dbUser => testHelpers.logInAndReturnToken(dbUser.email))
+      .then(token =>
+        chai
+          .request(server)
+          .post('/users/sessions/invalidate_all')
+          .set('token', token)
+          .then(res => {
+            res.should.have.status(200);
+          })
+          .then(() =>
+            chai
+              .request(server)
+              .post('/admin/users')
+              .set('content-type', 'application/json')
+              .set('token', token)
+              .send({
+                firstName: 'name',
+                lastName: 'surname',
+                email: testHelpers.getNotUsedEmail(),
+                password: testHelpers.testPassword
+              })
+              .catch(e => {
+                should.equal(e.response.body.internal_code, errors.AUTHENTICATION_ERROR);
+                should.equal(e.status, 401);
+                expect(e.response.body.message).to.equal(errorMessages.tokenExpired);
+                done();
+              })
+          )
+      );
   });
 });

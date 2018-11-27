@@ -16,10 +16,12 @@ exports.logIn = ({ user }, res, next) =>
           if (!validPassword) {
             throw errors.badRequest(errorMessages.invalidPassword);
           } else {
-            res
-              .status(200)
-              .send(jwt.generateTokenForUser(dbUser))
-              .end();
+            return jwt.generateTokenForUser(dbUser).then(token =>
+              res
+                .status(200)
+                .send(token)
+                .end()
+            );
           }
         });
       }
@@ -34,7 +36,7 @@ const emailIsRegistered = email =>
 const createUser = (user, isAdmin = false) =>
   bcryptService
     .hashPassword(user.password)
-    .then(hashedPassword => User.create({ ...user, password: hashedPassword, isAdmin }));
+    .then(hashedPassword => User.createModel({ ...user, password: hashedPassword, isAdmin }));
 
 exports.signUp = ({ user }, res, next) =>
   emailIsRegistered(user.email)
@@ -90,20 +92,30 @@ exports.createAdmin = (req, res, next) =>
     .catch(next);
 
 exports.listUsers = (req, res, next) =>
-  User.findAllModels({
-    limit: responsePaginationHelper.parsePageLimit(req.query),
-    offset: responsePaginationHelper.parseOffset(req.query)
-  })
-    .then(dbUsers => {
-      const toSendUsers = dbUsers.rows.map(u => ({
-        firstName: u.firstName,
-        lastName: u.lastName,
-        email: u.email
-      }));
+  jwt
+    .getUserForToken(req.headers.token)
+    .then(user =>
+      User.findAllModels({
+        limit: responsePaginationHelper.parsePageLimit(req.query),
+        offset: responsePaginationHelper.parseOffset(req.query)
+      }).then(dbUsers => {
+        const toSendUsers = dbUsers.rows.map(u => ({
+          firstName: u.firstName,
+          lastName: u.lastName,
+          email: u.email
+        }));
 
-      return res
-        .status(200)
-        .send({ users: toSendUsers })
-        .end();
-    })
+        return res
+          .status(200)
+          .send({ users: toSendUsers })
+          .end();
+      })
+    )
+    .catch(next);
+
+exports.invalidateAllTokens = (req, res, next) =>
+  jwt
+    .getUserForToken(req.headers.token)
+    .then(user => jwt.invalidateAllTokensForUser(user))
+    .then(() => res.status(200).end())
     .catch(next);
